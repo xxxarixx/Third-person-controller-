@@ -4,6 +4,14 @@ using UnityEngine;
 
 public class RigidbodyBasedMovement : MonoBehaviour
 {
+    /// <summary>
+    /// movement handler:
+    ///  movement based on rigidbody velocity
+    /// slope handler:
+    ///  if slope is too high then apply force torward to simulate jump from cliff
+    /// jump handler
+    /// 
+    /// </summary>
     public PlayerInput input;
 
     public Rigidbody rb;
@@ -17,8 +25,9 @@ public class RigidbodyBasedMovement : MonoBehaviour
     bool _isGrounded;
     [Header("Slopes")]
     public float SlopeCheckerSize = .1f;
-    [Range(0.01f,1f)]public float MaxSlope;
-    
+    [Range(0.01f,1f), Tooltip("closer to 0 is heigher slope ")]public float MaxSlope;
+    [Range(0.01f, 1f), Tooltip("closer to 0 is heigher slope ")] public float DownWardMaxSlope;
+    public float ForceForwardMultiplayFromToohighSlope = 5f;
     bool _isSlope;
 
     public Collider groundCheck;
@@ -118,12 +127,20 @@ public class RigidbodyBasedMovement : MonoBehaviour
             var moveDir = getMoveDirection(InputDirection);
             var hit = _getSlopeRaycasthit();
 
+
             if (hit.normal.y < MaxSlope && isOnSlope())
             {
                 rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration); 
                 Debug.Log("Too high slope");
             }
 
+            if(isOnSlope() && rb.velocity.y < 0 && _isGrounded && !_isJumping && hit.normal.y < DownWardMaxSlope)
+            {
+                Move(moveDir, _Speed);
+                rb.velocity = new Vector3(rb.velocity.x * ForceForwardMultiplayFromToohighSlope, -.5f, rb.velocity.z * ForceForwardMultiplayFromToohighSlope);
+                Debug.Log("NormalMovement too hith slope");
+            }
+            else
             if (isOnSlope() && !_isJumping && _isGrounded && hit.normal.y >= MaxSlope)
             {
                 var NewmoveDir = get_slopeMoveDir(moveDir,_getSlopeRaycasthit().normal);
