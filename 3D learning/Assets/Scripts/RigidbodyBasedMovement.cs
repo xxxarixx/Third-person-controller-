@@ -89,7 +89,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         _isGrounded = Physics.CheckSphere(_getFeetPos(), groundDistance, groundMask);
         //walk
         GetOnSmallObstaces();
-        Climbing();
+        //Climbing();
     }
     private void FixedUpdate()
     {
@@ -119,10 +119,10 @@ public class RigidbodyBasedMovement : MonoBehaviour
         Gizmos.DrawLine(_getFeetPos(0f, .25f, 0f), _getFeetPos(EndFeetRay.x, EndFeetRay.y + .25f, EndFeetRay.z));
 
 
-        foreach (var point in UniformPointsOnSphere(SpherePointsCount, cam.forward, ClimbingRaycastsFov))
+        /*foreach (var point in UniformPointsOnSphere(SpherePointsCount, cam.forward, ClimbingRaycastsFov))
         {
             Gizmos.DrawCube(headPos.transform.position + (point.normalized * ClimbingRad), new Vector3(.1f, .1f, .1f));
-        }
+        }*/
     }
     #region Slope
     private Vector3 _getSlopeRaycastPos()
