@@ -106,6 +106,8 @@ public class ProcedularAnimation : MonoBehaviour
     public bool ActiveMovement;
     public Rigidbody rb;
     public float MoveSpeed = 125f;
+    public AnimationCurve MoveForwardCurve;
+    public AnimationCurve MoveBackwardCurve;
     [Header("Gizmos")]
     [SerializeField]private float _Giz_LegPlacementSize = .1f;
     private void Start()

@@ -24,12 +24,14 @@ public class RigidbodyBasedMovement : MonoBehaviour
     public Transform TorsowPos;
     [Header("Casual movement")]
     public float Speed;
+    public float SprintSpeed;
     public float turnSmoothTime = 0.1f;
     public float MaxDistanceToJumpOnObstacle;
     private float turnSmoothVelocity;
     private float _Speed;
     private Vector3 HitAndHeadPos;
     private float cooldownJumpOverObstacle = 0f;
+    private bool isSprinting;
     [Header("Jump")]
     public LayerMask groundMask;
     public AnimationCurve JumpHeight;
@@ -47,7 +49,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
     [Header("Animations")]
     public string RunAnim;
     public string IdleAnim;
-
+    public string WalkAnim;
     [Header("Climbing")]
     public float ClimbingRad = 3f;
     public float SpherePointsCount = 15;
@@ -83,12 +85,27 @@ public class RigidbodyBasedMovement : MonoBehaviour
             gravity.ActiveGravity = true;
             transform.localScale = Vector3.one;
         }
+        if(rb.velocity.sqrMagnitude > .1f)
+        {
+            if (Input.GetKeyDown(KeyCode.LeftShift))
+            {
+                _Speed = SprintSpeed;
+                anim.Play(RunAnim);
+                isSprinting = true;
+            }
+        }
+        if (Input.GetKeyUp(KeyCode.LeftShift) && isSprinting)
+        {
+            _Speed = Speed;
+            anim.Play(WalkAnim);
+            isSprinting = false;
+        }
         if (_isJumping) _jumpHeightProgress += Time.deltaTime;
         if (_jumpHeightProgress >= JumpHeight.keys[JumpHeight.length - 1].time && _isJumping) { _isJumping = false; _jumpHeightProgress = 0f; }
         //jump
         _isGrounded = Physics.CheckSphere(_getFeetPos(), groundDistance, groundMask);
         //walk
-        GetOnSmallObstaces();
+        //GetOnSmallObstaces();
         //Climbing();
     }
     private void FixedUpdate()
@@ -194,7 +211,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
             }
 
 
-            anim.Play(RunAnim);
+            if(!isSprinting) anim.Play(WalkAnim);
         }
         else
         {
@@ -227,6 +244,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
     private void GetOnSmallObstaces()
     {
+
         if (cooldownJumpOverObstacle > 0) 
         { 
             cooldownJumpOverObstacle -= Time.deltaTime; 
