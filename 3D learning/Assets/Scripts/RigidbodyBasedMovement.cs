@@ -12,51 +12,54 @@ public class RigidbodyBasedMovement : MonoBehaviour
     /// 
     /// </summary>
     [Header("Scripts assigment")]
-    public Animator anim;
-    public PlayerInput input;
-    public Rigidbody rb;
-    public CustomGravity gravity;
+    [SerializeField]private Animator anim;
+    [SerializeField] private PlayerInput input;
+    [SerializeField] private Rigidbody rb;
+    [SerializeField] private CustomGravity gravity;
 
     [Header("PlayerParts")]
-    public Collider PlayerCollision;
-    public Transform cam;
-    public Transform headPos;
-    public Transform TorsowPos;
+    [SerializeField] private CapsuleCollider PlayerCollision;
+    [SerializeField] private Transform cam;
+    [SerializeField] private Transform headPos;
+    [SerializeField] private Transform TorsowPos;
     [Header("Casual movement")]
-    public float Speed;
-    public float SprintSpeed;
-    public float turnSmoothTime = 0.1f;
-    public float MaxDistanceToJumpOnObstacle;
+    [SerializeField] private float PlayerHeight = 1.85f;
+    [SerializeField] private float Speed;
+    [SerializeField] private float SprintSpeed;
+    [SerializeField] private float turnSmoothTime = 0.1f;
+    [SerializeField] private float MaxDistanceToJumpOnObstacle;
     private float turnSmoothVelocity;
     private float _Speed;
     private Vector3 HitAndHeadPos;
     private float cooldownJumpOverObstacle = 0f;
     private bool isSprinting;
+    [Header("Stairs handler")]
+    [SerializeField] private float StairsCheckDistanceFromPlayer = .1f;
     [Header("Jump")]
-    public LayerMask groundMask;
-    public AnimationCurve JumpHeight;
-    public float groundDistance = 0.4f;
+    [SerializeField] private LayerMask groundMask;
+    [SerializeField] private AnimationCurve JumpHeight;
+    [SerializeField] private float groundDistance = 0.4f;
     private float _jumpHeightProgress;
     private bool _isGrounded;
     private bool _isJumping = false;
 
     [Header("Slopes")]
-    public float SlopeCheckerSize = .1f;
-    [Range(0.01f,1f), Tooltip("closer to 0 is heigher slope ")]public float MaxSlope;
-    [Range(0.01f, 1f), Tooltip("closer to 0 is heigher slope ")] public float DownWardMaxSlope;
-    public float ForceForwardMultiplayFromToohighSlope = 5f;
+    [SerializeField] private float SlopeCheckerSize = .1f;
+    [Range(0.01f,1f), Tooltip("closer to 0 is heigher slope "), SerializeField] private float MaxSlope;
+    [Range(0.01f, 1f), Tooltip("closer to 0 is heigher slope "), SerializeField] private float DownWardMaxSlope;
+    [SerializeField] private float ForceForwardMultiplayFromToohighSlope = 5f;
 
     [Header("Animations")]
-    public string RunAnim;
-    public string IdleAnim;
-    public string WalkAnim;
+    [SerializeField] private string RunAnim;
+    [SerializeField] private string IdleAnim;
+    [SerializeField] private string WalkAnim;
     [Header("Climbing")]
-    public float ClimbingRad = 3f;
-    public float SpherePointsCount = 15;
+    [SerializeField] private float ClimbingRad = 3f;
+    [SerializeField] private float SpherePointsCount = 15;
     [Range(-1f,1f)]public float ClimbingRaycastsFov = .5f;
-    public float MaxWidthOfClimbingObj = 2f;
-    public Material SelectedMat;
-    public Material DeselectedMat;
+    [SerializeField] private float MaxWidthOfClimbingObj = 2f;
+    [SerializeField] private Material SelectedMat;
+    [SerializeField] private Material DeselectedMat;
     private void Start()
     {
         input.OnPressedJump += Input_OnPressedJump;
@@ -64,14 +67,15 @@ public class RigidbodyBasedMovement : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         canMove = true;
+        PlayerCollision.height = PlayerHeight;
     }
 
     private void Input_OnPressedJump()
     {
-        if (!_isGrounded) { return; }
+       /* if (!_isGrounded) { return; }
         _isJumping = true;
         
-        Debug.Log("Jumping");
+        Debug.Log("Jumping");*/
     }
     
     // Update is called once per frame
@@ -105,7 +109,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         //jump
         _isGrounded = Physics.CheckSphere(_getFeetPos(), groundDistance, groundMask);
         //walk
-        //GetOnSmallObstaces();
+        GetOnSmallObstaces();
         //Climbing();
     }
     private void FixedUpdate()
@@ -114,8 +118,17 @@ public class RigidbodyBasedMovement : MonoBehaviour
         {
             rb.velocity += Vector3.up * (CustomGravity.globalGravity * -1f) * JumpHeight.Evaluate(_jumpHeightProgress) * Time.fixedDeltaTime;
         }
-        
+        if (isOnSlope())
+        {
+            var hit = _getSlopeRaycasthit();
+            PlayerCollision.height = PlayerHeight - Mathf.Abs(1 - hit.normal.y);
+        }
+        else
+        {
+            PlayerCollision.height = PlayerHeight;
+        }
         Movement();
+        StairsHandler();
     }
     private Vector3 _getFeetPos(float offsetX = 0f,float offsetY = 0f,float offsetZ = 0f)
     {
@@ -123,6 +136,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
+        PlayerCollision.height = PlayerHeight;
+
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(_getFeetPos(), groundDistance);
 
@@ -135,7 +150,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
         var EndFeetRay = (transform.forward * MaxDistanceToJumpOnObstacle);
         Gizmos.DrawLine(_getFeetPos(0f, .25f, 0f), _getFeetPos(EndFeetRay.x, EndFeetRay.y + .25f, EndFeetRay.z));
 
-
+        Gizmos.color = Color.green;
+        DrawRaycastGizmo(transform.position + transform.forward * StairsCheckDistanceFromPlayer + transform.up * StairsCheckDistanceFromPlayer, Vector3.down,10f);
         /*foreach (var point in UniformPointsOnSphere(SpherePointsCount, cam.forward, ClimbingRaycastsFov))
         {
             Gizmos.DrawCube(headPos.transform.position + (point.normalized * ClimbingRad), new Vector3(.1f, .1f, .1f));
@@ -163,13 +179,13 @@ public class RigidbodyBasedMovement : MonoBehaviour
         return Vector3.ProjectOnPlane(moveDir, slopeNormal);
     }
     #endregion
-    public Vector3 getMoveDirection(Vector3 InputDirection)
+    public Vector3 getMoveDirection(Vector3 InputDirection, bool applyRotation = true)
     {
         float targetAngle = Mathf.Atan2(InputDirection.x, InputDirection.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
         float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-        transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        if(/*InputDirection.z >= 0 && */applyRotation) transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
-        return InputDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+        return Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
     }
     private void Movement()
     {
@@ -231,7 +247,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
        
         if (UseCustomDirVelocityY)
         {
-            rb.velocity = new Vector3(dir.x * speed * Time.fixedDeltaTime, dir.y * speed * Time.fixedDeltaTime, dir.z * speed * Time.fixedDeltaTime);
+            rb.velocity = dir * speed * Time.fixedDeltaTime; 
         }
         else
         {
@@ -268,6 +284,15 @@ public class RigidbodyBasedMovement : MonoBehaviour
             cooldownJumpOverObstacle = .2f;
             //_isJumping = false;
         }
+    }
+    private void StairsHandler()
+    {
+        if (cooldownJumpOverObstacle > 0f || input.Moveinput == Vector2.zero) return;
+        Physics.Raycast(transform.position + transform.forward * StairsCheckDistanceFromPlayer + transform.up * StairsCheckDistanceFromPlayer, Vector3.down, out RaycastHit hit, Mathf.Infinity, groundMask);
+        if (hit.collider == null) return;
+        Debug.Log($"hit normal: {hit.normal} hit point difference: {hit.point.y - transform.position.y}");
+        if (hit.normal == Vector3.up && hit.point.y - transform.position.y > 0.01f) TeleportPlayer(Vector3.Lerp(transform.position, hit.point, Time.deltaTime * 20f));
+        cooldownJumpOverObstacle = 0.1f;
     }
     public GameObject checkGo;
     private List<MeshRenderer> lastSelectedMeshes = new List<MeshRenderer>();
@@ -325,6 +350,11 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
 
     //it getting array of points direction on sphere 
+    #region Addons
+    private void DrawRaycastGizmo(Vector3 origin, Vector3 direciton, float Distance)
+    {
+        Gizmos.DrawLine(origin, origin + direciton * Distance);
+    }
     public static Vector3[] UniformPointsOnSphere(float numberOfPoints)
     {
         List<Vector3> points = new List<Vector3>();
@@ -365,6 +395,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         }
         return points.ToArray();
     }
+    #endregion
 }
 
 

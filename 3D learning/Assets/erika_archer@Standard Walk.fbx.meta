@@ -57,7 +57,102 @@ ModelImporter:
       heightFromFeet: 1
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
-      curves: []
+      curves:
+      - name: RightFoot
+        curve:
+          serializedVersion: 2
+          curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.24993435
+            value: 0.0023498535
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.81255317
+            value: 1
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0
+            inSlope: -2.8463442
+            outSlope: -2.8463442
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0.19450076
+            outWeight: 0
+          preInfinity: 3
+          postInfinity: 3
+          rotationOrder: 4
+      - name: LeftFoot
+        curve:
+          serializedVersion: 2
+          curve:
+          - serializedVersion: 3
+            time: 0
+            value: 0.5
+            inSlope: 2.5103765
+            outSlope: 2.5103765
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.17434633
+          - serializedVersion: 3
+            time: 0.2849452
+            value: 0.98812646
+            inSlope: -1.1461815
+            outSlope: -1.1461815
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0.14517196
+          - serializedVersion: 3
+            time: 0.50453895
+            value: 0.028670074
+            inSlope: -0.4529228
+            outSlope: -0.4529228
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0.37256482
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.7885776
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 1
+            value: 0.5
+            inSlope: 3.5507965
+            outSlope: 3.5507965
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0.18886724
+            outWeight: 0
+          preInfinity: 3
+          postInfinity: 3
+          rotationOrder: 4
       events: []
       transformMask: []
       maskType: 3

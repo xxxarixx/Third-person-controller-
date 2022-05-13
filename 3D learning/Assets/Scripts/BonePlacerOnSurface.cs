@@ -2,123 +2,30 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
-using UnityEditor;
 public class BonePlacerOnSurface : MonoBehaviour
 {
-    /*[Header("Bones")]
-    [SerializeField]private TwoBoneIKConstraint LeftLegIK;
-    [SerializeField] private TwoBoneIKConstraint RightLegIK;
-    [SerializeField] private Transform LeftSkeletonLeg;
-    [SerializeField] private Transform RightSkeletonLeg;
-    [SerializeField] private Transform LeftLegTarget;
-    [SerializeField] private Transform RightLegTarget;
-    [Header("Veriables")]
-    public float OffsetForward = .2f;
-    public float OffsetBackward = -.2f;
-    public float offsetUp = -.2f;
-    public float OffsetYOnFootPlace = .1f;
-    public float SmoothSpeedMultiplayer = 3f;
-    public Rigidbody rb;
-    public bool ActiveMovement;
-    public float MoveSpeed = 100f;
-    public bool ActiveIK = true;
-    public bool LeftFoothitting;
-    public bool RightFootHitting;
-    [SerializeField] private LayerMask groundMask;
-    public float DistanceToGround = .1f;
-    private void Update()
-    {
-        IkProcced();
-    }
-    private void FixedUpdate()
-    {
-        
-
-
-        if(!ActiveMovement) return;
-        var velocity = transform.forward.normalized * MoveSpeed * Time.fixedDeltaTime;
-        rb.velocity = new Vector3(velocity.x, rb.velocity.y, velocity.z);
-    }
-    private float LeftFootRotProgress;
-    private float RightFootRotProgress;
-    private void IkProcced()
-    {
-        if (!ActiveIK) return;
-        LeftFoothitting = Physics.Raycast(LeftSkeletonLeg.position + new Vector3(0f, DistanceToGround / 2 + offsetUp, 0f) + LeftSkeletonLeg.forward * OffsetForward, -LeftSkeletonLeg.up, out RaycastHit Lhit, DistanceToGround, groundMask);
-        RightFootHitting = Physics.Raycast(RightSkeletonLeg.position + new Vector3(0f, DistanceToGround / 2 + offsetUp, 0f) + RightSkeletonLeg.forward * OffsetForward, -RightSkeletonLeg.up, out RaycastHit Rhit, DistanceToGround, groundMask);
-        var LeftFoothittingBack = Physics.Raycast(LeftSkeletonLeg.position + new Vector3(0f, DistanceToGround / 2 + offsetUp, 0f) + LeftSkeletonLeg.forward * OffsetBackward, -LeftSkeletonLeg.up, out RaycastHit LhitB, DistanceToGround, groundMask);
-        var RightFootHittingBack = Physics.Raycast(RightSkeletonLeg.position + new Vector3(0f, DistanceToGround / 2 + offsetUp, 0f) + RightSkeletonLeg.forward * OffsetBackward, -RightSkeletonLeg.up, out RaycastHit RhitB, DistanceToGround, groundMask);
-        if (LeftFoothittingBack*//* && LeftFoothitting*//*)
-        {
-            LeftLegTarget.position = LhitB.point + LeftLegTarget.up * OffsetYOnFootPlace;
-            LeftLegIK.weight += Mathf.Clamp01(Time.deltaTime * SmoothSpeedMultiplayer);
-
-            //if(LeftFootRotProgress <= 1f) LeftFootRotProgress += Mathf.Clamp01(Time.deltaTime * SmoothSpeedMultiplayer);
-            //LeftLegTarget.rotation = Quaternion.Lerp(LeftLegTarget.rotation,NormalToRotation(LeftLegTarget.rotation,LeftLegTarget, LhitB.normal),LeftFootRotProgress);
-        }
-       *//* else
-        if (LeftFoothitting)
-        {
-            LeftLegTarget.position = Lhit.point + LeftLegTarget.up * OffsetYOnFootPlace;
-            LeftLegIK.weight += Mathf.Clamp01(Time.deltaTime * SmoothSpeedMultiplayer);
-            //if(LeftFootRotProgress >= 0f) LeftFootRotProgress = -0.1f;
-            //LeftLegTarget.rotation = Quaternion.Lerp(LeftLegTarget.rotation, NormalToRotation(LeftLegTarget.rotation, LeftLegTarget, Lhit.normal), LeftFootRotProgress);
-        }*//*
-        else
-        {
-            LeftLegIK.weight = 0f;
-        }
-        if (RightFootHittingBack *//*&& RightFootHitting*//*)
-        {
-            RightLegTarget.position = RhitB.point + RightLegTarget.up * OffsetYOnFootPlace;
-            RightLegIK.weight += Time.deltaTime * SmoothSpeedMultiplayer;
-           // if(RightFootRotProgress <= 1f) RightFootRotProgress += Mathf.Clamp01(Time.deltaTime * SmoothSpeedMultiplayer);
-            //RightLegTarget.rotation = Quaternion.Lerp(RightLegTarget.rotation, NormalToRotation(RightLegTarget.rotation, RightLegTarget, RhitB.normal), RightFootRotProgress);
-        }
-        *//*else
-        if (RightFootHitting)
-        {
-            RightLegTarget.position = Rhit.point + RightLegTarget.up * OffsetYOnFootPlace;
-            RightLegIK.weight += Mathf.Clamp01(Time.deltaTime * SmoothSpeedMultiplayer);
-            //if(RightFootRotProgress >= 0f) RightFootRotProgress = -0.1f;
-            //RightLegTarget.rotation = Quaternion.Lerp(RightLegTarget.rotation, NormalToRotation(RightLegTarget.rotation, RightLegTarget, Rhit.normal), RightFootRotProgress);
-        }*//*
-        else
-        {
-            RightLegIK.weight = 0f;
-        }
-    }
-    private void OnDrawGizmos()
-    {
-        DrawRaycastGizmo(LeftSkeletonLeg.position + new Vector3(0f, DistanceToGround / 2  + offsetUp, 0f) + LeftSkeletonLeg.forward * OffsetForward, -LeftSkeletonLeg.up, DistanceToGround);
-        DrawRaycastGizmo(RightSkeletonLeg.position + new Vector3(0f, DistanceToGround / 2 + offsetUp, 0f) + RightSkeletonLeg.forward * OffsetForward, -RightSkeletonLeg.up, DistanceToGround);
-
-        DrawRaycastGizmo(LeftSkeletonLeg.position + new Vector3(0f, DistanceToGround / 2 + offsetUp, 0f) + LeftSkeletonLeg.forward * OffsetBackward, -LeftSkeletonLeg.up, DistanceToGround);
-        DrawRaycastGizmo(RightSkeletonLeg.position + new Vector3(0f, DistanceToGround / 2 + offsetUp, 0f) + RightSkeletonLeg.forward * OffsetBackward, -RightSkeletonLeg.up, DistanceToGround);
-    }
-    private void DrawRaycastGizmo(Vector3 origin, Vector3 direciton, float Distance)
-    {
-        Gizmos.DrawLine(origin, origin + direciton * Distance);
-    }
-    public Quaternion NormalToRotation(Quaternion currentRoation, Transform transform, Vector3 normal)
-    {
-        return Quaternion.LookRotation(Vector3.ProjectOnPlane(transform.forward, normal), normal);
-    }*/
+   
 
     [Header("Bones")]
-    [SerializeField]private TwoBoneIKConstraint LeftLegIK;
-    [SerializeField] private TwoBoneIKConstraint RightLegIK;
+    public CustomGravity gravity;
+    public RigidbodyBasedMovement movement;
+    //[SerializeField]private TwoBoneIKConstraint NextMove_LeftLegIK;
+   // [SerializeField] private TwoBoneIKConstraint NextMove_RightLegIK;
+    [SerializeField] private TwoBoneIKConstraint FootOnGround_LeftLegIK;
+    [SerializeField] private TwoBoneIKConstraint FootOnGround_RightLegIK;
     private Transform LeftFoot;
     private Transform RightFoot;
     private Transform LeftKnee;
     private Transform RightKnee;
     private Transform LeftToe;
     private Transform RightToe;
-    [SerializeField] private Transform LeftLegTarget;
-    [SerializeField] private Transform RightLegTarget;
+    //[SerializeField] private Transform NextMove_LeftLegTarget;
+    //[SerializeField] private Transform NextMove_RightLegTarget;
+    [SerializeField] private Transform FootOnGround_LeftLegTarget;
+    [SerializeField] private Transform FootOnGround_RightLegTarget;
     [SerializeField] private Transform SkeletonOrigin;
-    public Transform LeftFootAnimPos;
-    public Transform RightFootAnimPos;
+    public Transform LeftFootAnimation;
+    public Transform RightFootAnimation;
     [Header("Other veriables:")]
     public Animator skeletonAnimator;
     [SerializeField] private LayerMask groundMask;
@@ -128,11 +35,11 @@ public class BonePlacerOnSurface : MonoBehaviour
    // public bool ActiveMovement;
     //public float MoveSpeed = 100f;
     public float OffsetYOnFootPlace = 0f;
-    private float _LeftFootWeight;
-    private float _RightFootWeight;
     public bool LeftToeHitting;
     public bool RightToeHitting;
     public float BodyPositoon;
+    public float SizeLegsSpacing = 2f;
+    public Vector3 FootCheckBoxSize = Vector3.one;
     private void _ConfigureBodyParts()
     {
         LeftFoot = skeletonAnimator.GetBoneTransform(HumanBodyBones.LeftFoot);
@@ -145,51 +52,297 @@ public class BonePlacerOnSurface : MonoBehaviour
     private void Awake()
     {
         _ConfigureBodyParts();
-        LeftLegIK.weight = 1f;
-        RightLegIK.weight = 1f; 
     }
-    private float SkeletonOriginProgress = 0f;
+    private Vector3 LeftHitPos;
+    private Vector3 RightHitPos;
+    private Quaternion LeftHitQuat;
+    private Quaternion RightHitQuat;
+    private float LeftFootGraph;
+    private float RightFootGraph;
+
+    public float footForwardSize = .3f;
+   // public float LegsBodyCorrectSpeed = 1f;
+   // public float LegFuturePosMultiplayer = 10f;
     private void FixedUpdate()
     {
-        if(rb.velocity.sqrMagnitude > .1f)
+        
+        LeftFootAnimation.position = skeletonAnimator.GetIKPosition(AvatarIKGoal.LeftFoot);
+        RightFootAnimation.position = skeletonAnimator.GetIKPosition(AvatarIKGoal.RightFoot);
+        LeftFootGraph = skeletonAnimator.GetFloat("LeftFoot");
+        RightFootGraph = skeletonAnimator.GetFloat("RightFoot");
+
+        // je¿eli wartoœæ curve'a jest 0 to poruszaj siê jak w animacji tylko jedynie trzymaj siê ziemi ( change only y position) (dotyka ziemi)
+        //je¿eli wartoœæ curve'a jest 1 to porusz siê do przysz³ej pozycji nogi (change x,y,z position based on weight) (w powietrzu)
+        //obliczyæ d³ugoœæ k³adzenia nogi poprzez ró¿nice (pocz¹tku k³adzenia nogi odj¹æ koniec k³adzenia nogi ) przemno¿one przez prêdkoœæ animacji i 
+
+
+        //if foot is in object then move foot to up of an object
+        bool leftFootInsideObj = false;
+        bool RightFootInsideObj = false;
+        if(LeftFootGraph < .1f)
         {
+            leftFootInsideObj = Physics.CheckBox(LeftToe.position, FootCheckBoxSize, LeftToe.rotation, groundMask);
+        }
+        else
+        {
+            leftFootInsideObj = Physics.CheckBox(LeftFootAnimation.position, FootCheckBoxSize, LeftToe.rotation, groundMask);
+            
+        }
+        if(RightFootGraph < .1f)
+        {
+            RightFootInsideObj = Physics.CheckBox(RightToe.position, FootCheckBoxSize, RightToe.rotation, groundMask);
+        }
+        else
+        {
+            RightFootInsideObj = Physics.CheckBox(RightFootAnimation.position, FootCheckBoxSize, RightToe.rotation, groundMask);
+        }
+        if (leftFootInsideObj || LeftFootGraph == 0)
+        {
+            var LeftFoothitting = Physics.Raycast(LeftFootAnimation.position + new Vector3(0f, GetKneeToeHeight(LeftKnee, LeftFootAnimation), 0f) + offsetToe, -transform.up + OffsetYOnFootPlace * Vector3.up, out RaycastHit LeftHit, OffsetDistanceToGround + GetKneeToeHeight(LeftKnee, LeftFootAnimation), groundMask);
+            if (LeftFoothitting)
+            {
+                FootOnGround_LeftLegIK.weight += Time.fixedDeltaTime * 5f;
+                LeftHitPos = new Vector3(LeftFootAnimation.position.x, LeftHit.point.y, LeftFootAnimation.position.z) + OffsetYOnFootPlace * Vector3.up;
+                LeftHitQuat = NormalToRotation(LeftFootAnimation, LeftHit.normal);
+            }
+            
+        }
+        else
+        {
+            FootOnGround_LeftLegIK.weight -= Time.fixedDeltaTime * 5f;
+            LeftHitPos = LeftFootAnimation.position;
+            LeftHitQuat = LeftFootAnimation.rotation;
+        }
+        if (RightFootInsideObj || RightFootGraph == 0)
+        {
+            var RightFootHitting = Physics.Raycast(RightFootAnimation.position + new Vector3(0f, GetKneeToeHeight(RightKnee, RightFootAnimation), 0f) + offsetToe + OffsetYOnFootPlace * Vector3.up, -transform.up, out RaycastHit RightHit, OffsetDistanceToGround + GetKneeToeHeight(RightKnee, RightFootAnimation), groundMask);
+            if (RightFootHitting)
+            {
+                FootOnGround_RightLegIK.weight += Time.fixedDeltaTime * 5f;
+                RightHitPos = new Vector3(RightFootAnimation.position.x, RightHit.point.y, RightFootAnimation.position.z) + OffsetYOnFootPlace * Vector3.up;
+                RightHitQuat = NormalToRotation(LeftFootAnimation, RightHit.normal);
 
-            var moveDirection = transform.forward;
-
-
-
+            }
+            
+        }
+        else
+        {
+            FootOnGround_RightLegIK.weight -= Time.fixedDeltaTime * 5f;
+            RightHitPos = RightFootAnimation.position;
+            RightHitQuat = RightFootAnimation.rotation;
         }
 
+       
+
+        FootOnGround_LeftLegTarget.position = LeftHitPos;
+        FootOnGround_RightLegTarget.position = RightHitPos;
+
+        FootOnGround_LeftLegTarget.rotation = LeftHitQuat;
+        FootOnGround_RightLegTarget.rotation = RightHitQuat;
+        //NextMove_LeftLegTarget.position = LFhitPos;
+        //NextMove_RightLegTarget.position = RFhitPos;
 
 
-        LeftFootAnimPos.position = skeletonAnimator.GetIKPosition(AvatarIKGoal.LeftFoot);
-        RightFootAnimPos.position = skeletonAnimator.GetIKPosition(AvatarIKGoal.RightFoot);
+
+
+
+
+
+
+
+    }
+    public Quaternion NormalToRotation(Transform transform, Vector3 normal)
+    {
+        return Quaternion.LookRotation(Vector3.ProjectOnPlane(transform.forward, normal), normal);
+    }
+    private void OnDrawGizmos()
+    {
+        _ConfigureBodyParts();
+        
+
+        Gizmos.color = Color.white;
+        DrawRaycastGizmo(LeftFootAnimation.position + new Vector3(0f, GetKneeToeHeight(LeftKnee, LeftFootAnimation), 0f) + offsetToe, -transform.up, OffsetDistanceToGround + GetKneeToeHeight(LeftKnee, LeftFootAnimation));
+        DrawRaycastGizmo(RightFootAnimation.position + new Vector3(0f, GetKneeToeHeight(RightKnee, RightFootAnimation), 0f) + offsetToe, -transform.up, OffsetDistanceToGround + GetKneeToeHeight(RightKnee, RightFootAnimation));
+        Gizmos.color = Color.green;
+       
+
+        Gizmos.color = Color.yellow;
+
+        Gizmos.matrix = LeftToe.localToWorldMatrix;
+        Gizmos.DrawCube(Vector3.zero, FootCheckBoxSize);
+        Gizmos.matrix = Matrix4x4.identity;
+
+        Gizmos.color = Color.blue;
+
+        Gizmos.matrix = RightToe.localToWorldMatrix;
+        Gizmos.DrawCube(Vector3.zero, FootCheckBoxSize);
+        Gizmos.matrix = Matrix4x4.identity;
+
+    }
+    private float GetKneeToeHeight(Transform knee, Transform Toe)
+    {
+        return knee.position.y - Toe.position.y;
+    }
+
+    private void DrawRaycastGizmo(Vector3 origin, Vector3 direciton, float Distance)
+    {
+        Gizmos.DrawLine(origin, origin + direciton * Distance);
+    }
+    public Quaternion NormalToRotation(Quaternion currentRoation, Transform transform, Vector3 normal)
+    {
+        return Quaternion.LookRotation(Vector3.ProjectOnPlane(transform.forward, normal), normal);
+    }
+     void SomeOldStuff()
+        {
+        #region oldCode
+        /* if (LeftFootGraph > .1f)
+        {
+            //var futureLeftLegPos = LeftFootAnimPos.position + (movement.getMoveDirection(movement.input.Moveinput, false) + rb.velocity * (1f / skeletonAnimator.speed) * Time.fixedDeltaTime) * LegFuturePosMultiplayer;
+            NextMove_LeftLegIK.weight = LeftFootGraph;
+        }
+        else
+        {
+            var LeftFoothitting = Physics.Raycast(LeftFootAnimPos.position + new Vector3(0f, GetKneeToeHeight(LeftKnee, LeftFootAnimPos), 0f) + offsetToe, -transform.up + OffsetYOnFootPlace * Vector3.up, out RaycastHit LhitGround, OffsetDistanceToGround + GetKneeToeHeight(LeftKnee, LeftFootAnimPos), groundMask);
+            if (LeftFoothitting)
+            {
+                LFhitPos = LhitGround.point;
+                NextMove_LeftLegIK.weight = LeftFootGraph;
+            }
+        }
+        if(RightFootGraph > .1f)
+        {
+            //var futureRightLegPos = RightFootAnimPos.position + (movement.getMoveDirection(movement.input.Moveinput, false) + rb.velocity * (1f / skeletonAnimator.speed) * Time.fixedDeltaTime) * LegFuturePosMultiplayer;
+            NextMove_RightLegIK.weight = RightFootGraph;
+        }
+        else
+        {
+            var RightFootHitting = Physics.Raycast(RightFootAnimPos.position + new Vector3(0f, GetKneeToeHeight(RightKnee, RightFootAnimPos), 0f) + offsetToe + OffsetYOnFootPlace * Vector3.up, -transform.up, out RaycastHit RhitGround, OffsetDistanceToGround + GetKneeToeHeight(RightKnee, RightFootAnimPos), groundMask);
+            if (RightFootHitting)
+            {
+                RFhitPos = RhitGround.point;
+                NextMove_RightLegIK.weight = RightFootGraph;
+            }
+        }*/
         /*if(SkeletonOrigin.localPosition.y != OffsetYOnFootPlace)
         {
             SkeletonOrigin.localPosition = new Vector3(SkeletonOrigin.localPosition.x, OffsetYOnFootPlace, SkeletonOrigin.localPosition.z);
         }*/
-        var LeftFoothitting = Physics.Raycast(LeftFootAnimPos.position + new Vector3(0f, GetKneeToeHeight(LeftKnee, LeftFootAnimPos), 0f) + offsetToe, -transform.up, out RaycastHit Lhit, OffsetDistanceToGround + GetKneeToeHeight(LeftKnee, LeftFootAnimPos), groundMask);
+        /*var LeftFoothitting = Physics.Raycast(LeftFootAnimPos.position + new Vector3(0f, GetKneeToeHeight(LeftKnee, LeftFootAnimPos), 0f) + offsetToe, -transform.up, out RaycastHit Lhit, OffsetDistanceToGround + GetKneeToeHeight(LeftKnee, LeftFootAnimPos), groundMask);
         var RightFootHitting = Physics.Raycast(RightFootAnimPos.position + new Vector3(0f, GetKneeToeHeight(RightKnee, RightFootAnimPos), 0f) + offsetToe, -transform.up, out RaycastHit Rhit, OffsetDistanceToGround + GetKneeToeHeight(RightKnee, RightFootAnimPos), groundMask);
         if (LeftFoothitting)
         {
             LeftLegTarget.position = Lhit.point + Lhit.normal * OffsetYOnFootPlace;
             LeftLegTarget.rotation = NormalToRotation(LeftLegTarget.rotation, LeftFoot, Lhit.normal);
         }
-        /*else
+        else
         {
-            LeftLegTarget.position = LeftFoot.position;
-        }*/
+            //LeftLegTarget.position = LeftFoot.position;
+        }
         
         if (RightFootHitting)
         {
             RightLegTarget.position = Rhit.point + Rhit.normal * OffsetYOnFootPlace;
             RightLegTarget.rotation = NormalToRotation(RightLegTarget.rotation, RightFoot, Rhit.normal);
 
+        }*/
+        #endregion
+        /*Gizmos.matrix = LeftToe.localToWorldMatrix;
+   Gizmos.DrawWireCube(new Vector3(0f,.07f,0f), new Vector3(.1f,0.02f,.2f));
+   Gizmos.matrix = RightToe.localToWorldMatrix;
+   Gizmos.DrawWireCube(new Vector3(0f, .07f, 0f), new Vector3(.1f, 0.02f, .2f));*/
+
+
+        /* Gizmos.color = Color.yellow;
+         Gizmos.matrix = Matrix4x4.identity;
+         DrawRaycastGizmo(LeftToe.position + GetKneeToeHeight(LeftKnee, LeftToe) * Vector3.up, -Vector2.up, OffsetDistanceToGround + GetKneeToeHeight(LeftKnee, LeftToe));
+
+         Gizmos.DrawSphere(LThit.point + LThit.normal * OffsetYOnFootPlace, 0.05f);
+
+         Gizmos.color = Color.blue;
+         Gizmos.matrix = Matrix4x4.identity;
+         DrawRaycastGizmo(RightToe.position + GetKneeToeHeight(RightKnee, RightToe) * Vector3.up, -Vector2.up, OffsetDistanceToGround + GetKneeToeHeight(RightKnee, RightToe));
+
+         Gizmos.DrawSphere(RThit.point + RThit.normal * OffsetYOnFootPlace, 0.05f);*/
+
+
+        //SkeletonOrigin.localPosition = SkeletonOrigin.InverseTransformPoint(Vector3.Lerp(LeftFoot.position, RightFoot.position, .5f));
+        //Debug.Log(Vector3.Lerp(LeftFoot.position, RightFoot.position, .5f));
+
+        //var LegsHeight = 2f;
+        /*#region leftFoot
+        if (LeftFootGraph < .1f)
+        {
+            LeftLegIK.weight = 1f;
+
+            //stay feet on ground and keep animation playing freely
+            var LeftFoothitting = Physics.Raycast(LeftFootAnimPos.position + new Vector3(0f, GetKneeToeHeight(LeftKnee, LeftFootAnimPos), 0f) + offsetToe, -transform.up, out RaycastHit LhitGround, OffsetDistanceToGround + GetKneeToeHeight(LeftKnee, LeftFootAnimPos), groundMask);
+
+            if (LeftFoothitting)
+            {
+                LChitPos = LhitGround.point;
+            }
+
+
+            //1. (for 1 foot) target = future position | weight += time.deltatime or get animation curve | if weight > .9f >>> calculate future position
+            var futureLeftLegPos = LeftFootAnimPos.position + movement.getMoveDirection(movement.input.Moveinput, false) + rb.velocity * Time.deltaTime * (1f /skeletonAnimator.speed) * SizeLegsSpacing;
+            var lHitting = Physics.Raycast(futureLeftLegPos + LegsHeight * Vector3.up, Vector3.down, out RaycastHit Lhit, Mathf.Infinity, groundMask);
+            if (lHitting)
+            {
+                // if(LeftLegIK.weight < .3f)//foot is in air
+                {
+                    LFhitPos = Lhit.point;
+                }
+            }
         }
-        float LegDifferenceMultiplayer = 1f;
+        else
+        {
+            //pointing to destination point
+            LeftLegIK.weight = LeftFootGraph;
+            LChitPos = LFhitPos;
+
+        }
+        #endregion
+        #region RightFoot
+        if (RightFootGraph < .1f)
+        {
+            RightLegIK.weight = 1f;
+            var RightFootHitting = Physics.Raycast(RightFootAnimPos.position + new Vector3(0f, GetKneeToeHeight(RightKnee, RightFootAnimPos), 0f) + offsetToe, -transform.up, out RaycastHit RhitGround, OffsetDistanceToGround + GetKneeToeHeight(RightKnee, RightFootAnimPos), groundMask);
+            if (RightFootHitting)
+            {
+                RChitPos = RhitGround.point;
+            }
+
+
+            var futureRightLegPos = RightFootAnimPos.position + movement.getMoveDirection(movement.input.Moveinput, false) + rb.velocity * Time.deltaTime * (1f / skeletonAnimator.speed) * SizeLegsSpacing;
+            var rHitting = Physics.Raycast(futureRightLegPos + LegsHeight * Vector3.up, Vector3.down, out RaycastHit Rhit, Mathf.Infinity, groundMask);
+            if (rHitting)
+            {
+                // if(RightLegIK.weight < .3f)//foot is in air
+                {
+                    RFhitPos = Rhit.point;
+                }
+            }
+        }
+        else
+        {
+            //pointing to destination point
+            RightLegIK.weight = RightFootGraph;
+            RChitPos = RFhitPos;
+
+        }
+        #endregion*/
+
+
+
+
+
+        //skeletonAnimator.u
+
+        #region OldSttuff
+        //float LegDifferenceMultiplayer = 1f;
         //if(Lhit.normal != Vector3.up || Rhit.normal != Vector3.up) LegDifferenceMultiplayer = 4f; else LegDifferenceMultiplayer = 1f;
 
-        Debug.Log("isonSlope");
+        /*Debug.Log("isonSlope");
         if (LeftFoothitting || RightFootHitting) 
         {
             if(Rhit.point.y - Lhit.point.y > .1f || Rhit.point.y - Lhit.point.y < .1f)
@@ -210,26 +363,30 @@ public class BonePlacerOnSurface : MonoBehaviour
                     SkeletonOrigin.localPosition = new Vector3(SkeletonOrigin.localPosition.x, legDifference / LegDifferenceMultiplayer, SkeletonOrigin.localPosition.z);
                 }
             }
-        }
-            /*if(Rhit.point.y - transform.position.y > Lhit.point.y - transform.position.y)
+        }*/
+        /*_LeftFootWeight = skeletonAnimator.GetFloat("LeftFoot");
+        _RightFootWeight = skeletonAnimator.GetFloat("RightFoot");
+        LeftLegIK.weight = _LeftFootWeight;
+        RightLegIK.weight = _RightFootWeight;*/
+        /*if(Rhit.point.y - transform.position.y > Lhit.point.y - transform.position.y)
+        {
+            if (-(transform.position.y -) / 2 > -1f)
             {
-                if (-(transform.position.y -) / 2 > -1f)
-                {
-                    //right leg is lower
-                    //SkeletonOrigin.localPosition = Vector3.Lerp(SkeletonOrigin.localPosition, new Vector3(SkeletonOrigin.localPosition.x, -Rhit.normal.y / 5, SkeletonOrigin.localPosition.z), SkeletonOriginProgress);
-                    SkeletonOrigin.localPosition = new Vector3(SkeletonOrigin.localPosition.x, -(transform.position.y - Rhit.point.y) / 2, SkeletonOrigin.localPosition.z);
-                }
+                //right leg is lower
+                //SkeletonOrigin.localPosition = Vector3.Lerp(SkeletonOrigin.localPosition, new Vector3(SkeletonOrigin.localPosition.x, -Rhit.normal.y / 5, SkeletonOrigin.localPosition.z), SkeletonOriginProgress);
+                SkeletonOrigin.localPosition = new Vector3(SkeletonOrigin.localPosition.x, -(transform.position.y - Rhit.point.y) / 2, SkeletonOrigin.localPosition.z);
             }
-            else
+        }
+        else
+        {
+            if(-(transform.position.y - Lhit.point.y) / 2 > -1f)
             {
-                if(-(transform.position.y - Lhit.point.y) / 2 > -1f)
-                {
-                    //left leg is lower
-                    SkeletonOrigin.localPosition = new Vector3(SkeletonOrigin.localPosition.x, -(transform.position.y - Lhit.point.y) / 2, SkeletonOrigin.localPosition.z);
-                }
-            }*/
-            //SkeletonOriginProgress += Time.deltaTime;
-        
+                //left leg is lower
+                SkeletonOrigin.localPosition = new Vector3(SkeletonOrigin.localPosition.x, -(transform.position.y - Lhit.point.y) / 2, SkeletonOrigin.localPosition.z);
+            }
+        }*/
+        //SkeletonOriginProgress += Time.deltaTime;
+
         /*else
         {
             SkeletonOrigin.localPosition = Vector3.zero;
@@ -273,188 +430,72 @@ public class BonePlacerOnSurface : MonoBehaviour
         LeftLegIK.weight = _LeftFootWeight;
         RightLegIK.weight = _RightFootWeight;*/
         //_Movement();
-    }
-    RaycastHit LThit = new RaycastHit();
-    RaycastHit RThit = new RaycastHit();
-    /*private void _Movement()
-    {
-        if (!ActiveMovement) return;
-        var velocity = transform.forward.normalized * MoveSpeed * Time.fixedDeltaTime;
-        rb.velocity = new Vector3(velocity.x, rb.velocity.y, velocity.z);
-    }*/
-    private void OnDrawGizmos()
-    {
-        _ConfigureBodyParts();
-        
-        Gizmos.color = Color.white;
-        DrawRaycastGizmo(LeftFoot.position + new Vector3(0f, GetKneeToeHeight(LeftKnee, LeftFoot), 0f) + offsetToe, -transform.up, OffsetDistanceToGround + GetKneeToeHeight(LeftKnee, LeftFoot));
-        DrawRaycastGizmo(RightFoot.position + new Vector3(0f, GetKneeToeHeight(RightKnee, RightFoot), 0f) + offsetToe, -transform.up, OffsetDistanceToGround + GetKneeToeHeight(RightKnee, RightFoot));
-        Gizmos.color = Color.green;
-        /*Gizmos.matrix = LeftToe.localToWorldMatrix;
-        Gizmos.DrawWireCube(new Vector3(0f,.07f,0f), new Vector3(.1f,0.02f,.2f));
-        Gizmos.matrix = RightToe.localToWorldMatrix;
-        Gizmos.DrawWireCube(new Vector3(0f, .07f, 0f), new Vector3(.1f, 0.02f, .2f));*/
-
-
-        /* Gizmos.color = Color.yellow;
-         Gizmos.matrix = Matrix4x4.identity;
-         DrawRaycastGizmo(LeftToe.position + GetKneeToeHeight(LeftKnee, LeftToe) * Vector3.up, -Vector2.up, OffsetDistanceToGround + GetKneeToeHeight(LeftKnee, LeftToe));
-
-         Gizmos.DrawSphere(LThit.point + LThit.normal * OffsetYOnFootPlace, 0.05f);
-
-         Gizmos.color = Color.blue;
-         Gizmos.matrix = Matrix4x4.identity;
-         DrawRaycastGizmo(RightToe.position + GetKneeToeHeight(RightKnee, RightToe) * Vector3.up, -Vector2.up, OffsetDistanceToGround + GetKneeToeHeight(RightKnee, RightToe));
-
-         Gizmos.DrawSphere(RThit.point + RThit.normal * OffsetYOnFootPlace, 0.05f);*/
-
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawSphere(LeftLegTarget.position, .1f);
-        Gizmos.color = Color.blue;
-        Gizmos.DrawSphere(RightLegTarget.position, .1f);
-
-
-        Gizmos.color = Color.black;
-        Debug.Log(rb.velocity.magnitude);
-        var futureLeftLegPos = skeletonAnimator.GetIKPosition(AvatarIKGoal.LeftFoot) + transform.forward.normalized * rb.velocity.magnitude * .3f;
-        var lHitting = Physics.Raycast(futureLeftLegPos + new Vector3(0f, 2f, 0f), Vector3.down, out RaycastHit Lhit, Mathf.Infinity, groundMask);
-        if(lHitting) Gizmos.DrawSphere(Lhit.point, .1f);
-
-        var futureRightLegPos = skeletonAnimator.GetIKPosition(AvatarIKGoal.RightFoot) + transform.forward.normalized * rb.velocity.magnitude * .3f;
-        var rHitting = Physics.Raycast(futureRightLegPos + new Vector3(0f, 2f, 0f), Vector3.down, out RaycastHit Rhit, Mathf.Infinity, groundMask);
-        if(rHitting) Gizmos.DrawSphere(Rhit.point, .1f);
-    }
-    private float GetKneeToeHeight(Transform knee, Transform Toe)
-    {
-        return knee.position.y - Toe.position.y;
-    }
-
-    private void DrawRaycastGizmo(Vector3 origin, Vector3 direciton, float Distance)
-    {
-        Gizmos.DrawLine(origin, origin + direciton * Distance);
-    }
-    public Quaternion NormalToRotation(Quaternion currentRoation, Transform transform, Vector3 normal)
-    {
-        return Quaternion.LookRotation(Vector3.ProjectOnPlane(transform.forward, normal), normal);
-    }
-    /*public Animator skeletonAnimator;
-    public Rigidbody rb;
-    private Transform _LeftFoot;
-    private Transform _RightFoot;
-    public AnimationCurve LeftFootCurve;
-    public AnimationCurve RightFootCurve;
-    private float _LeftFootWeight;
-    private float _RightFootWeight;
-    private float _Footsprogress;
-    public bool isMoving;
-    public TwoBoneIKConstraint LeftFootIK;
-    public TwoBoneIKConstraint RightFootIK;
-    private void Awake()
-    {
-        _LeftFoot = skeletonAnimator.GetBoneTransform(HumanBodyBones.LeftFoot);
-        _RightFoot = skeletonAnimator.GetBoneTransform(HumanBodyBones.RightFoot);
-    }
-    private void Start()
-    {
-        LeftFootIK.weight = 1f;
-        RightFootIK.weight = 1f;
-    }
-    private void Update()
-    {
-
-        //if (rb.velocity.sqrMagnitude > .1f) isMoving = true; else isMoving = false;
-        if (isMoving)
+        #endregion
+        //RaycastHit LThit = new RaycastHit();
+        //RaycastHit RThit = new RaycastHit();
+        /*private void _Movement()
         {
-            _Footsprogress += Time.deltaTime;
-            if(_Footsprogress >= 1f)
-            {
-                _Footsprogress = 0f;
-            }
-
-        }
-        else
-        {
-            _Footsprogress = 0f;
-        }
-        _LeftFootWeight = skeletonAnimator.GetFloat("LeftFoot");
-        _RightFootWeight = skeletonAnimator.GetFloat("RightFoot");
-
-
-        //LeftFootIK.weight = _LeftFootWeight;
-        //RightFootIK.weight = _RightFootWeight;
-    }
-    private void OnDrawGizmos()
-    {
-        
-    }*/
-
-
-
-}
-class CurveCreator
+            if (!ActiveMovement) return;
+            var velocity = transform.forward.normalized * MoveSpeed * Time.fixedDeltaTime;
+            rb.velocity = new Vector3(velocity.x, rb.velocity.y, velocity.z);
+        }*/
+        /*public Animator skeletonAnimator;
+public Rigidbody rb;
+private Transform _LeftFoot;
+private Transform _RightFoot;
+public AnimationCurve LeftFootCurve;
+public AnimationCurve RightFootCurve;
+private float _LeftFootWeight;
+private float _RightFootWeight;
+private float _Footsprogress;
+public bool isMoving;
+public TwoBoneIKConstraint LeftFootIK;
+public TwoBoneIKConstraint RightFootIK;
+private void Awake()
 {
-    public Animator SkeletonAnimator;
-    private Transform leftFoot;
-    private Transform rightFoot;
-    public string ClipName = "Run";
-    public AnimationCurve LeftFootCurve;
-    public AnimationCurve RightFootCurve;
-    private bool LeftFootFounded;
-    private bool RightFootFounded;
+ _LeftFoot = skeletonAnimator.GetBoneTransform(HumanBodyBones.LeftFoot);
+ _RightFoot = skeletonAnimator.GetBoneTransform(HumanBodyBones.RightFoot);
+}
+private void Start()
+{
+ LeftFootIK.weight = 1f;
+ RightFootIK.weight = 1f;
+}
+private void Update()
+{
 
-    public AnimationCurve Repainted_LeftFootCurve;
-    public AnimationCurve Repainted_RightFootCurve;
-    private void Awake()
-    {
-        leftFoot = SkeletonAnimator.GetBoneTransform(HumanBodyBones.LeftFoot);
-        rightFoot = SkeletonAnimator.GetBoneTransform(HumanBodyBones.RightFoot);
-        Debug.Log(leftFoot.name);
-        var LeftFootPath = SkeletonAnimator.name + " : Animator.Left Foot T";
-        //var RightFootPath = SkeletonAnimator.name + " : Animator.Right Foot T";
-        AnimationClip _clip = null;
-        foreach (var clips in SkeletonAnimator.GetCurrentAnimatorClipInfo(0))
-        {
-            if (clips.clip.name == ClipName)
-            {
-                _clip = clips.clip;
-                break;
-            }
-        }
-        //create curve
-        LeftFootFounded = false;
-        RightFootFounded = false;
-        var curveBindings = UnityEditor.AnimationUtility.GetCurveBindings(_clip);
+ //if (rb.velocity.sqrMagnitude > .1f) isMoving = true; else isMoving = false;
+ if (isMoving)
+ {
+     _Footsprogress += Time.deltaTime;
+     if(_Footsprogress >= 1f)
+     {
+         _Footsprogress = 0f;
+     }
 
-        foreach (var curveBinding in curveBindings)
-        {
-            Debug.Log(curveBinding.path + ", " + curveBinding.propertyName);
+ }
+ else
+ {
+     _Footsprogress = 0f;
+ }
+ _LeftFootWeight = skeletonAnimator.GetFloat("LeftFoot");
+ _RightFootWeight = skeletonAnimator.GetFloat("RightFoot");
 
-            if (curveBinding.propertyName == "LeftFootT.y")
-            {
-                LeftFootCurve = AnimationUtility.GetEditorCurve(_clip, curveBinding);
-                Debug.Log("curve> " + " " + curveBinding.path + ", " + curveBinding.propertyName);
-                LeftFootFounded = true;
-            }
-            else
-            if (curveBinding.propertyName == "RightFootT.y")
-            {
-                RightFootCurve = AnimationUtility.GetEditorCurve(_clip, curveBinding);
-                Debug.Log("curve> " + " " + curveBinding.path + ", " + curveBinding.propertyName);
-                RightFootFounded = true;
-            }
-            if (LeftFootFounded && RightFootFounded) break;
-        }
 
-        int heighestKeyID = 0;
-        int LowestKeyID = 0;
-        for (int i = 0; i < LeftFootCurve.keys.Length; i++)
-        {
-            var curveKey = LeftFootCurve.keys[i];
-            if (curveKey.value > LeftFootCurve[heighestKeyID].value) heighestKeyID = i;
-            if (curveKey.value < LeftFootCurve[LowestKeyID].value) LowestKeyID = i;
-        }
-        Repainted_LeftFootCurve.AddKey(LeftFootCurve[heighestKeyID].time, LeftFootCurve[heighestKeyID].value);
-        Repainted_LeftFootCurve.AddKey(LeftFootCurve[LowestKeyID].time, LeftFootCurve[LowestKeyID].value);
+ //LeftFootIK.weight = _LeftFootWeight;
+ //RightFootIK.weight = _RightFootWeight;
+}
+private void OnDrawGizmos()
+{
+
+}*/
+
+
+
 
     }
+
+
+
+
 }
