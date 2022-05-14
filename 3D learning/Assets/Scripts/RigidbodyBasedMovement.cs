@@ -12,10 +12,12 @@ public class RigidbodyBasedMovement : MonoBehaviour
     /// 
     /// </summary>
     [Header("Scripts assigment")]
+    public static RigidbodyBasedMovement instance;
     [SerializeField]private Animator anim;
-    [SerializeField] private PlayerInput input;
+    public PlayerInput input;
     [SerializeField] private Rigidbody rb;
     [SerializeField] private CustomGravity gravity;
+    [SerializeField] private Cinemachine.CinemachineFreeLook cinemachineCam;
 
     [Header("PlayerParts")]
     [SerializeField] private CapsuleCollider PlayerCollision;
@@ -60,6 +62,13 @@ public class RigidbodyBasedMovement : MonoBehaviour
     [SerializeField] private float MaxWidthOfClimbingObj = 2f;
     [SerializeField] private Material SelectedMat;
     [SerializeField] private Material DeselectedMat;
+    [Header("Teleport player from void")]
+    [SerializeField] private float TeleportWhenPlayerYEqual = -10f;
+    private Vector3 startingPosition;
+    private void Awake()
+    {
+        instance = this;
+    }
     private void Start()
     {
         input.OnPressedJump += Input_OnPressedJump;
@@ -68,6 +77,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         Cursor.visible = false;
         canMove = true;
         PlayerCollision.height = PlayerHeight;
+        startingPosition = transform.position;
     }
 
     private void Input_OnPressedJump()
@@ -111,6 +121,10 @@ public class RigidbodyBasedMovement : MonoBehaviour
         //walk
         GetOnSmallObstaces();
         //Climbing();
+        if(transform.position.y < TeleportWhenPlayerYEqual)
+        {
+            transform.position = startingPosition;
+        }
     }
     private void FixedUpdate()
     {
@@ -129,6 +143,13 @@ public class RigidbodyBasedMovement : MonoBehaviour
         }
         Movement();
         StairsHandler();
+    }
+    private bool lockPlayerInput;
+    public void LocklockPlayerInput(bool EnableLock, bool InteractOnVCam = false)
+    {
+        lockPlayerInput = EnableLock;
+        rb.velocity = Vector3.zero;
+        if(InteractOnVCam) cinemachineCam.enabled = !EnableLock;
     }
     private Vector3 _getFeetPos(float offsetX = 0f,float offsetY = 0f,float offsetZ = 0f)
     {
@@ -183,7 +204,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
     {
         float targetAngle = Mathf.Atan2(InputDirection.x, InputDirection.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
         float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
-        if(/*InputDirection.z >= 0 && */applyRotation) transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        if(/*InputDirection.z >= 0 && */applyRotation && !lockPlayerInput) transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
         return Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
     }
@@ -244,7 +265,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
     public void Move(Vector3 dir, float speed, bool UseCustomDirVelocityY = false)
     {
-       
+        if (lockPlayerInput) return;
         if (UseCustomDirVelocityY)
         {
             rb.velocity = dir * speed * Time.fixedDeltaTime; 
