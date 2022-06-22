@@ -30,8 +30,9 @@ public class RigidbodyBasedMovement : MonoBehaviour
     [SerializeField] private float SprintSpeed;
     [SerializeField] private float turnSmoothTime = 0.1f;
     [SerializeField] private float MaxDistanceToJumpOnObstacle;
+
     private float turnSmoothVelocity;
-    private float _Speed;
+    public float speed_Current { get;private set; }
     private Vector3 HitAndHeadPos;
     private float cooldownJumpOverObstacle = 0f;
     private bool isSprinting;
@@ -72,7 +73,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
     private void Start()
     {
         input.OnPressedJump += Input_OnPressedJump;
-        _Speed = Speed;
+        speed_Current = Speed;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         canMove = true;
@@ -97,26 +98,27 @@ public class RigidbodyBasedMovement : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.C))
+        /*if (Input.GetKeyDown(KeyCode.C))
         {
             transform.SetParent(null, true);
             canMove = true;
             PlayerCollision.enabled = true;
             gravity.ActiveGravity = true;
             transform.localScale = Vector3.one;
-        }
-        if(rb.velocity.sqrMagnitude > .1f)
+        }*/
+      
+        if (rb.velocity.sqrMagnitude > .1f)
         {
             if (Input.GetKeyDown(KeyCode.LeftShift))
             {
-                _Speed = SprintSpeed;
+                speed_Current = SprintSpeed;
                 anim.Play(RunAnim);
                 isSprinting = true;
             }
         }
         if (Input.GetKeyUp(KeyCode.LeftShift) && isSprinting)
         {
-            _Speed = Speed;
+            speed_Current = Speed;
             anim.Play(WalkAnim);
             isSprinting = false;
         }
@@ -206,7 +208,12 @@ public class RigidbodyBasedMovement : MonoBehaviour
         return Vector3.ProjectOnPlane(moveDir, slopeNormal);
     }
     #endregion
-    public Vector3 getMoveDirection(Vector3 InputDirection, bool applyRotation = true)
+    public Vector3 GetInstanceMoveDirection(Vector3 InputDirection)
+    {
+        float targetAngle = Mathf.Atan2(InputDirection.x, InputDirection.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+        return Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+    }
+    public Vector3 GetMoveDirection(Vector3 InputDirection, bool applyRotation = true)
     {
         float targetAngle = Mathf.Atan2(InputDirection.x, InputDirection.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
         float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
@@ -220,7 +227,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         Vector3 InputDirection = new Vector3(input.Moveinput.x, 0f, input.Moveinput.y).normalized;
         if (InputDirection.magnitude >= 0.1f)
         {
-            var moveDir = getMoveDirection(InputDirection);
+            var moveDir = GetMoveDirection(InputDirection);
             var hit = _getSlopeRaycasthit();
 
 
@@ -232,7 +239,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
 
             if(isOnSlope() && rb.velocity.y < 0 && _isGrounded && !_isJumping && hit.normal.y < DownWardMaxSlope)
             {
-                Move(moveDir, _Speed);
+                Move(moveDir, speed_Current);
                 rb.velocity = new Vector3(rb.velocity.x * ForceForwardMultiplayFromToohighSlope, -.5f, rb.velocity.z * ForceForwardMultiplayFromToohighSlope);
                 Debug.Log("NormalMovement too hith slope");
             }
@@ -240,17 +247,17 @@ public class RigidbodyBasedMovement : MonoBehaviour
             if (isOnSlope() && !_isJumping && _isGrounded && hit.normal.y >= MaxSlope)
             {
                 var NewmoveDir = get_slopeMoveDir(moveDir,_getSlopeRaycasthit().normal);
-                Move(NewmoveDir,_Speed, true);
+                Move(NewmoveDir,speed_Current, true);
                 Debug.Log("Slope movement");
             }
             else if(_isGrounded)
             {
-                Move(moveDir, _Speed);
+                Move(moveDir, speed_Current);
                 Debug.Log("NormalMovement");
             }
             else if(!_isGrounded)
             {
-                Move(moveDir, _Speed * 0.75f);
+                Move(moveDir, speed_Current * 0.75f);
             }
 
 

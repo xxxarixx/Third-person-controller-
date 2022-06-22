@@ -10,6 +10,7 @@ public class PlayerInput : MonoBehaviour
     public event PressedKey OnHold;
     public event PressedKey OnEndHolding;
     private bool startHolding = false;
+  
     void Start()
     {
 
@@ -31,6 +32,7 @@ public class PlayerInput : MonoBehaviour
             OnHold?.Invoke();
         }
         Moveinput = _GetMovement();
+       
         if (PressedJump())
         {
             OnPressedJump?.Invoke();
