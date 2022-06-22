@@ -127,7 +127,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         //jump
         _isGrounded = Physics.CheckSphere(_getFeetPos(), groundDistance, groundMask);
         //walk
-        GetOnSmallObstaces();
+        //GetOnSmallObstaces();
         //Climbing();
         if(transform.position.y < TeleportWhenPlayerYEqual)
         {
@@ -150,7 +150,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
             PlayerCollision.height = PlayerHeight;
         }
         Movement();
-        StairsHandler();
+        //StairsHandler();
     }
     private bool lockPlayerInput;
     public void LocklockPlayerInput(bool EnableLock, bool InteractOnVCam = false)
@@ -208,11 +208,6 @@ public class RigidbodyBasedMovement : MonoBehaviour
         return Vector3.ProjectOnPlane(moveDir, slopeNormal);
     }
     #endregion
-    public Vector3 GetInstanceMoveDirection(Vector3 InputDirection)
-    {
-        float targetAngle = Mathf.Atan2(InputDirection.x, InputDirection.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
-        return Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-    }
     public Vector3 GetMoveDirection(Vector3 InputDirection, bool applyRotation = true)
     {
         float targetAngle = Mathf.Atan2(InputDirection.x, InputDirection.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
@@ -221,17 +216,44 @@ public class RigidbodyBasedMovement : MonoBehaviour
 
         return Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
     }
+    public float PlayerHeightStanding = 1.85f;
+    public float WalkingOnSlopesHeight = 1.2f;
     private void Movement()
     {
         if (!canMove) return;
         Vector3 InputDirection = new Vector3(input.Moveinput.x, 0f, input.Moveinput.y).normalized;
-        if (InputDirection.magnitude >= 0.1f)
+        if (InputDirection.magnitude >= 0.01f)
         {
             var moveDir = GetMoveDirection(InputDirection);
-            var hit = _getSlopeRaycasthit();
+            var feetPos = transform.position + new Vector3(0, -0.075f, 0f);
+            if (Universal_RaycastAssistance.instance.IsItProperHeight(feetPos, transform.forward, 1f, groundMask, out RaycastHit _heightHit, 0.6f))
+            {
+                if(Universal_RaycastAssistance.instance.RaycastHitFromToY(feetPos, transform.forward, 2.5f, feetPos.y, feetPos.y + 1.75f, 20, groundMask, out RaycastHit _lowestHit,out RaycastHit _heighestHit, .65f))
+                {
+                    PlayerHeight = WalkingOnSlopesHeight;
+                    gravity.ActiveGravity = false;
+                    //applay movement from current position to heighest hit
+                    Move(((_heighestHit.point + Vector3.up/* *Vector3.Distance(feetPos, _heighestHit.point)*/ * .6f) - transform.position).normalized, speed_Current, true);
+
+                }
+                else
+                {
+                    PlayerHeight = PlayerHeightStanding;
+                    //too high slope
+                    rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration);
+                    gravity.ActiveGravity = true;
+                }
+            }
+            else
+            {
+                PlayerHeight = PlayerHeightStanding;
+                gravity.ActiveGravity = true;
+            }
+
+            //var hit = _getSlopeRaycasthit();
 
 
-            if (hit.normal.y < MaxSlope && isOnSlope())
+            /*if (hit.normal.y < MaxSlope && isOnSlope())
             {
                 rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration); 
                 Debug.Log("Too high slope");
@@ -250,7 +272,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
                 Move(NewmoveDir,speed_Current, true);
                 Debug.Log("Slope movement");
             }
-            else if(_isGrounded)
+            else*/ 
+            if(_isGrounded)
             {
                 Move(moveDir, speed_Current);
                 Debug.Log("NormalMovement");
@@ -266,7 +289,9 @@ public class RigidbodyBasedMovement : MonoBehaviour
         else
         {
             anim.Play(IdleAnim);
-            if(rb.velocity.y > 0 && !_isJumping)
+            PlayerHeight = PlayerHeightStanding;
+            gravity.ActiveGravity = true;
+            if (rb.velocity.y > 0 && !_isJumping)
             {
                 rb.velocity = new Vector3(0f, 0f, 0f);
             }

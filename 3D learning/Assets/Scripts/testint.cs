@@ -14,6 +14,7 @@ public class testint : MonoBehaviour
     [Header("Forward")]
     public int amount = 20;
     public float destinationY = 2f;
+    public float destinationZ = 2f;
     public float Distance = 2f;
     public bool DebugFromFirstHitYPos = false;
     public float FirstHitoffsetY = .1f;
@@ -53,6 +54,8 @@ public class testint : MonoBehaviour
                 }
                 break;
             case Debugs.both:
+                //Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(transform.position, -transform.up, Distance, transform.position.z, transform.position.z + destinationZ, amount, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, DotMaxSlope);
+
                 Universal_RaycastAssistance.instance.IsItProperHeightGizmos(transform.position, transform.forward, maxHeight, 1 << 8, distanceForwardFromPlayer);
                 if (Universal_RaycastAssistance.instance.IsItProperHeight(transform.position, transform.forward, maxHeight, 1 << 8, out RaycastHit HeightHit, distanceForwardFromPlayer))
                 {
@@ -62,12 +65,12 @@ public class testint : MonoBehaviour
                     if (DebugFromFirstHitYPos)
                     {
                         Gizmos.color = Color.magenta;
-                        Gizmos.DrawLine(_lowestHit.point + Vector3.up * FirstHitoffsetY, _heighestHit.point);
+                        Gizmos.DrawLine(_lowestHit.point + Vector3.up * FirstHitoffsetY, _heighestHit.point + Vector3.up/* * Vector3.Distance(transform.position,_heighestHit.point)*/ * .6f);
                     }
                     else
                     {
                         Gizmos.color = Color.magenta;
-                        Gizmos.DrawLine(new Vector3(transform.position.x, _lowestHit.point.y, transform.position.z), _heighestHit.point);
+                        Gizmos.DrawLine(new Vector3(transform.position.x, _lowestHit.point.y, transform.position.z), _heighestHit.point + Vector3.up /** Vector3.Distance(transform.position, _heighestHit.point)*/ * .6f);
                     }
                 }
                 break;
