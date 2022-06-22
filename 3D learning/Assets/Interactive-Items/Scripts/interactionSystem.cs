@@ -29,7 +29,7 @@ public class interactionSystem : MonoBehaviour
         interactActive = true;
 
         interactPreview_Parent.gameObject.SetActive(true);
-
+        //USE VECTOR3.CROSS EXAMPLE https://www.youtube.com/watch?v=kz92vvioeng
         var spawnedInteract = Instantiate(interactPreview, interactPreview_Center);
         spawnedInteract.transform.localPosition = Vector3.zero;
         spawnedInteract.transform.localRotation = Quaternion.identity;

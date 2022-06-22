@@ -78,6 +78,12 @@ public class RigidbodyBasedMovement : MonoBehaviour
         canMove = true;
         PlayerCollision.height = PlayerHeight;
         startingPosition = transform.position;
+
+        var YPositions = Universal_RaycastAssistance.instance.GetBetweenValues(.5f,4.5f,12);
+        foreach (var yPos in YPositions)
+        {
+            Debug.Log($"YPos: {yPos}");
+        }
     }
 
     private void Input_OnPressedJump()
@@ -172,7 +178,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         Gizmos.DrawLine(_getFeetPos(0f, .25f, 0f), _getFeetPos(EndFeetRay.x, EndFeetRay.y + .25f, EndFeetRay.z));
 
         Gizmos.color = Color.green;
-        DrawRaycastGizmo(transform.position + transform.forward * StairsCheckDistanceFromPlayer + transform.up * StairsCheckDistanceFromPlayer, Vector3.down,10f);
+        Universal_RaycastAssistance.instance.DrawRaycastGizmo(transform.position + transform.forward * StairsCheckDistanceFromPlayer + transform.up * StairsCheckDistanceFromPlayer, Vector3.down,10f);
         /*foreach (var point in UniformPointsOnSphere(SpherePointsCount, cam.forward, ClimbingRaycastsFov))
         {
             Gizmos.DrawCube(headPos.transform.position + (point.normalized * ClimbingRad), new Vector3(.1f, .1f, .1f));
@@ -289,7 +295,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         }
 
         var IsHittingObstacle = Physics.Raycast(_getFeetPos(0f,.25f,0f), transform.forward, out RaycastHit forwardHit, MaxDistanceToJumpOnObstacle, groundMask);
-        Debug.Log(forwardHit.normal);
+        //Debug.Log(forwardHit.normal);
         if(IsHittingObstacle && forwardHit.collider != null && (forwardHit.normal.y < 0.1))
         {
             var isHittingFromHead = Physics.Raycast(headPos.transform.position, transform.forward, out RaycastHit HeadHit, MaxDistanceToJumpOnObstacle * 3, groundMask);
@@ -329,7 +335,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         RaycastHit ClosestHit = new RaycastHit();
         float DotClosest = -2f;
         float ClosestDistance = 0f;
-        foreach (var point in UniformPointsOnSphere(SpherePointsCount, cam.forward, ClimbingRaycastsFov))
+        foreach (var point in Universal_RaycastAssistance.instance.UniformPointsOnSphere(SpherePointsCount, cam.forward, ClimbingRaycastsFov))
         {
             Physics.Raycast(headPos.transform.position, point.normalized, out RaycastHit forwardHit, ClimbingRad, groundMask);
             if (forwardHit.collider == null) continue;
@@ -372,50 +378,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
 
     //it getting array of points direction on sphere 
     #region Addons
-    private void DrawRaycastGizmo(Vector3 origin, Vector3 direciton, float Distance)
-    {
-        Gizmos.DrawLine(origin, origin + direciton * Distance);
-    }
-    public static Vector3[] UniformPointsOnSphere(float numberOfPoints)
-    {
-        List<Vector3> points = new List<Vector3>();
-        float i = Mathf.PI * (3 - Mathf.Sqrt(5));
-        float offset = 2 / numberOfPoints;
-        float halfOffset = 0.5f * offset;
-        int currPoint = 0;
-        for (; currPoint < numberOfPoints; currPoint++)
-        {
-            float y = currPoint * offset - 1 + halfOffset;
-            float r = Mathf.Sqrt(1 - y * y);
-            float phi = currPoint * i;
-            Vector3 point = new Vector3(Mathf.Cos(phi) * r, y, Mathf.Sin(phi) * r);
-            if (!points.Contains(point)) points.Add(point);
-        }
-        return points.ToArray();
-    }
-    public static Vector3[] UniformPointsOnSphere(float numberOfPoints,Vector3 LookDir, float MinDotProduct = .5f)
-    {
-        List<Vector3> points = new List<Vector3>();
-        float i = Mathf.PI * (3 - Mathf.Sqrt(5));
-        float offset = 2 / numberOfPoints;
-        float halfOffset = 0.5f * offset;
-        int currPoint = 0;
-        for (; currPoint < numberOfPoints; currPoint++)
-        {
-            float y = currPoint * offset - 1 + halfOffset;
-            float r = Mathf.Sqrt(1 - y * y);
-            float phi = currPoint * i;
-            Vector3 point = new Vector3(Mathf.Cos(phi) * r, y, Mathf.Sin(phi) * r);
-            if (!points.Contains(point))
-            {
-                if(Vector3.Dot(LookDir.normalized, point.normalized) > MinDotProduct)
-                {
-                    points.Add(point);
-                }
-            }
-        }
-        return points.ToArray();
-    }
+   
     #endregion
 }
 
