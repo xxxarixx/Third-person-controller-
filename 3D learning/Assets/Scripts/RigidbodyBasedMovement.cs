@@ -218,6 +218,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
     public float PlayerHeightStanding = 1.85f;
     public float WalkingOnSlopesHeight = 1.2f;
+    public bool ProperHeightWorking = false;
+    public bool RaycastHitFromToYWorking = false;
     private void Movement()
     {
         if (!canMove) return;
@@ -225,13 +227,16 @@ public class RigidbodyBasedMovement : MonoBehaviour
         if (InputDirection.magnitude >= 0.01f)
         {
             var moveDir = GetMoveDirection(InputDirection);
-            var feetPos = transform.position + new Vector3(0, -0.075f, 0f);
-            if (Universal_RaycastAssistance.instance.IsItProperHeight(feetPos, transform.forward, 1f, groundMask, out RaycastHit _heightHit, 0.6f))
+            var feetPos = transform.position + new Vector3(0, -0.1f, 0f);
+            Universal_RaycastAssistance.instance.RaycastHitFromToZ(transform.position, -transform.up, new Vector3(0f, 1f,0f), transform.forward, 0.85f, .75f, 23, 1 << 8,out RaycastHit _FrontlowestHit,  out RaycastHit _FrontheighestHit);
+            ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(transform.position, _FrontheighestHit.point, transform.forward, 1f, groundMask, out RaycastHit _heightHit, 0f);
+            if (ProperHeightWorking)
             {
-                if(Universal_RaycastAssistance.instance.RaycastHitFromToY(feetPos, transform.forward, 2.5f, feetPos.y, feetPos.y + 1.75f, 20, groundMask, out RaycastHit _lowestHit,out RaycastHit _heighestHit, .65f))
+                RaycastHitFromToYWorking = Universal_RaycastAssistance.instance.RaycastHitFromToY(transform.position, transform.forward, 2.5f, transform.position.y, transform.position.y + 1.75f, 34, groundMask, out RaycastHit _lowestHit, out RaycastHit _heighestHit, .65f);
+                if (RaycastHitFromToYWorking)
                 {
                     PlayerHeight = WalkingOnSlopesHeight;
-                    gravity.ActiveGravity = false;
+                    if(Vector2.Dot(Vector2.up, _heightHit.normal) > .9f) gravity.ActiveGravity = false;
                     //applay movement from current position to heighest hit
                     Move(((_heighestHit.point + Vector3.up/* *Vector3.Distance(feetPos, _heighestHit.point)*/ * .6f) - transform.position).normalized, speed_Current, true);
 
@@ -290,7 +295,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         {
             anim.Play(IdleAnim);
             PlayerHeight = PlayerHeightStanding;
-            gravity.ActiveGravity = true;
+            //gravity.ActiveGravity = true;
             if (rb.velocity.y > 0 && !_isJumping)
             {
                 rb.velocity = new Vector3(0f, 0f, 0f);
