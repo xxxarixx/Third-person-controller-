@@ -53,6 +53,10 @@ public class PlayerInput : MonoBehaviour
     {
         return new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
     }
+    public Vector3 GetMoveDirectionInput()
+    {
+        return new Vector3(Moveinput.x, 0f, Moveinput.y).normalized;
+    }
     public bool PressedInteraction()
     {
         return Input.GetKeyDown(KeyCode.F);

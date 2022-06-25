@@ -31,7 +31,7 @@ public class Universal_RaycastAssistance
             {
                 Physics.Raycast(_feetPos + new Vector3(0f, _playerHeight, 0f), Vector3.down, out RaycastHit _feetHit, Mathf.Infinity, _layerMask);
                 Debug.Log($"Height hit checker {_downHit.point.y - _feetPos.y} is heigher then 0.1f");
-                if (_downHit.point.y - _feetHit.point.y > 0.1f && _downHit.point.y < _feetHit.point.y + _maxheight)
+                if (/*_downHit.point.y - _feetHit.point.y > 0.1f &&*/ _downHit.point.y < _feetHit.point.y + _maxheight)
                 {
                     HeightHit = _downHit;
                     return true;
@@ -52,7 +52,7 @@ public class Universal_RaycastAssistance
             if (_downHitted)
             {
                 Physics.Raycast(_feetPos + new Vector3(0f, _playerHeight, 0f), Vector3.down, out RaycastHit _feetHit, Mathf.Infinity, _layerMask);
-                if (_downHit.point.y - _feetHit.point.y > 0.1f && _downHit.point.y < _feetHit.point.y + _maxheight)
+                if (/*_downHit.point.y - _feetHit.point.y > 0.1f &&*/ _downHit.point.y < _feetHit.point.y + _maxheight)
                 {
                     Gizmos.color = Color.green;
                     Gizmos.DrawSphere(_downHit.point, .1f);
@@ -236,7 +236,7 @@ public class Universal_RaycastAssistance
         Gizmos.color = _HeighestHitColor;
         DrawRaycastGizmo(_heighestHitOrigin, _RaycastsDirection, _distance);
     }
-    public void RaycastHitFromToZ(Vector3 _startPosition, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask,out RaycastHit _lowestHit, out RaycastHit _heighestHit)
+    public bool RaycastHitFromToZ(Vector3 _startPosition, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask,out RaycastHit _lowestHit, out RaycastHit _heighestHit)
     {
         float _lastLowestZHitPos = float.MaxValue;
         RaycastHit _LastlowestZhit = new RaycastHit();
@@ -248,8 +248,8 @@ public class Universal_RaycastAssistance
             Debug.Log(_zValue);
             Vector3 origin = facingDirection * _zValue + new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) + offset;
             bool hitted = Physics.Raycast(origin, _RaycastsDirection, out RaycastHit hit, _distance, _layerMask);
-            startHitted = hitted;
             if (!hitted) continue;
+            startHitted = true;
             if (startHitted && !hitted) break;
             var posDiff = Mathf.Abs(hit.point.z - _startPosition.z);
             if (posDiff < _lastLowestZHitPos)
@@ -266,6 +266,7 @@ public class Universal_RaycastAssistance
         }
         _lowestHit = _LastlowestZhit;
         _heighestHit = _LastHeighestZHit;
+        return startHitted && _heighestHit.point.y - _startPosition.y > 0.01f;
     }
     private Vector2 CalculateNormal(Vector2 v1,Vector2 v2)
     {

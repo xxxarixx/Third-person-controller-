@@ -79,12 +79,12 @@ public class RigidbodyBasedMovement : MonoBehaviour
         canMove = true;
         PlayerCollision.height = PlayerHeight;
         startingPosition = transform.position;
-
         var YPositions = Universal_RaycastAssistance.instance.GetBetweenValues(.5f,4.5f,12);
         foreach (var yPos in YPositions)
         {
             Debug.Log($"YPos: {yPos}");
         }
+
     }
 
     private void Input_OnPressedJump()
@@ -106,15 +106,21 @@ public class RigidbodyBasedMovement : MonoBehaviour
             gravity.ActiveGravity = true;
             transform.localScale = Vector3.one;
         }*/
-      
-        if (rb.velocity.sqrMagnitude > .1f)
+
+        /* gravity.ActiveGravity = false;
+         var hittedGround = Physics.Raycast(_getColliderPos(), Vector3.down, out RaycastHit Groundhit, Mathf.Infinity, groundMask);
+
+         //if (hittedGround && Mathf.Abs(rb.position.y - Groundhit.point.y) < .4f)
+         {
+             rb.position = new Vector3(rb.position.x, Groundhit.point.y, rb.position.z);
+         }*/
+        //if (MoveStairCooldown > 0f) MoveStairCooldown -= Time.deltaTime;
+        Vector3 InputDirection = input.GetMoveDirectionInput();
+        if (Input.GetKeyDown(KeyCode.LeftShift))
         {
-            if (Input.GetKeyDown(KeyCode.LeftShift))
-            {
-                speed_Current = SprintSpeed;
-                anim.Play(RunAnim);
-                isSprinting = true;
-            }
+            speed_Current = SprintSpeed;
+            anim.Play(RunAnim);
+            isSprinting = true;
         }
         if (Input.GetKeyUp(KeyCode.LeftShift) && isSprinting)
         {
@@ -126,6 +132,11 @@ public class RigidbodyBasedMovement : MonoBehaviour
         if (_jumpHeightProgress >= JumpHeight.keys[JumpHeight.length - 1].time && _isJumping) { _isJumping = false; _jumpHeightProgress = 0f; }
         //jump
         _isGrounded = Physics.CheckSphere(_getFeetPos(), groundDistance, groundMask);
+        /*if (!_isGrounded)
+        {
+            gravity.ActiveGravity = true;
+            groundCol.enabled = true;
+        }*/
         //walk
         //GetOnSmallObstaces();
         //Climbing();
@@ -133,9 +144,11 @@ public class RigidbodyBasedMovement : MonoBehaviour
         {
             transform.position = startingPosition;
         }
+
     }
     private void FixedUpdate()
     {
+        Movement();
         if (_isJumping && _jumpHeightProgress < JumpHeight.keys[JumpHeight.length - 1].time)
         {
             rb.velocity += Vector3.up * (CustomGravity.globalGravity * -1f) * JumpHeight.Evaluate(_jumpHeightProgress) * Time.fixedDeltaTime;
@@ -149,7 +162,6 @@ public class RigidbodyBasedMovement : MonoBehaviour
         {
             PlayerCollision.height = PlayerHeight;
         }
-        Movement();
         //StairsHandler();
     }
     private bool lockPlayerInput;
@@ -161,8 +173,13 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
     private Vector3 _getFeetPos(float offsetX = 0f,float offsetY = 0f,float offsetZ = 0f)
     {
-        return PlayerCollision.bounds.center - new Vector3(0f, PlayerCollision.bounds.size.y / 2, 0f) + new Vector3(offsetX,offsetY,offsetZ);
+        return transform.position /*PlayerCollision.bounds.center - new Vector3(0f, PlayerCollision.bounds.size.y / 2, 0f)*/ + new Vector3(offsetX,offsetY,offsetZ);
     }
+    private Vector3 _getColliderPos(float offsetX = 0f, float offsetY = 0f, float offsetZ = 0f)
+    {
+        return PlayerCollision.bounds.center - new Vector3(0f, PlayerCollision.bounds.size.y / 2, 0f) + new Vector3(offsetX, offsetY, offsetZ);
+    }
+    public float SkinWidth;
     private void OnDrawGizmos()
     {
         PlayerCollision.height = PlayerHeight;
@@ -170,21 +187,37 @@ public class RigidbodyBasedMovement : MonoBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(_getFeetPos(), groundDistance);
 
-        Gizmos.color = Color.blue;
-        Gizmos.DrawLine(_getSlopeRaycastPos(), _getSlopeRaycastPos() + new Vector3(0f,-SlopeCheckerSize,0f));
+        //Gizmos.color = Color.blue;
+        //Gizmos.DrawLine(_getSlopeRaycastPos(), _getSlopeRaycastPos() + new Vector3(0f,-SlopeCheckerSize,0f));
 
-        Gizmos.color = Color.red;
-        Gizmos.DrawSphere(HitAndHeadPos, .2f);
+        //Gizmos.color = Color.red;
+        //Gizmos.DrawSphere(HitAndHeadPos, .2f);
 
-        var EndFeetRay = (transform.forward * MaxDistanceToJumpOnObstacle);
-        Gizmos.DrawLine(_getFeetPos(0f, .25f, 0f), _getFeetPos(EndFeetRay.x, EndFeetRay.y + .25f, EndFeetRay.z));
+        //var EndFeetRay = (transform.forward * MaxDistanceToJumpOnObstacle);
+        //Gizmos.DrawLine(_getFeetPos(0f, .25f, 0f), _getFeetPos(EndFeetRay.x, EndFeetRay.y + .25f, EndFeetRay.z));
 
-        Gizmos.color = Color.green;
-        Universal_RaycastAssistance.instance.DrawRaycastGizmo(transform.position + transform.forward * StairsCheckDistanceFromPlayer + transform.up * StairsCheckDistanceFromPlayer, Vector3.down,10f);
+        //Gizmos.color = Color.green;
+        //Universal_RaycastAssistance.instance.DrawRaycastGizmo(transform.position + transform.forward * StairsCheckDistanceFromPlayer + transform.up * StairsCheckDistanceFromPlayer, Vector3.down,10f);
         /*foreach (var point in UniformPointsOnSphere(SpherePointsCount, cam.forward, ClimbingRaycastsFov))
         {
             Gizmos.DrawCube(headPos.transform.position + (point.normalized * ClimbingRad), new Vector3(.1f, .1f, .1f));
         }*/
+      /*  var moveDir = GetMoveDirection(false);
+        if (!Application.isPlaying) moveDir = transform.forward;
+        Gizmos.color = Color.red;
+        Universal_RaycastAssistance.instance.DrawRaycastGizmo(_getColliderPos(0f, MaxWallHeight) + moveDir * SkinWidth, moveDir, RaycastLength * (SkinWidth + .5f));
+
+        Gizmos.color = Color.blue;
+        Universal_RaycastAssistance.instance.DrawRaycastGizmo(_getColliderPos(0f, SkinWidth - OffsetGroundCheckerY) + moveDir * SkinWidth, -transform.up, RaycastLength * 10f);
+
+        Gizmos.color = Color.red;
+        Universal_RaycastAssistance.instance.DrawRaycastGizmo(_getColliderPos(0f, SkinWidth - OffsetGroundCheckerY) + moveDir * SkinWidth, -transform.up, RaycastLength);*/
+        //var groundCheckHitted = Physics.Raycast(_getColliderPos(0f, MaxWallHeight) + transform.forward * SkinWidth + transform.forward * RaycastLength * (SkinWidth + 1f), -transform.up, out RaycastHit groundCheckHit, Mathf.Infinity, groundMask);
+        //Gizmos.DrawSphere(groundCheckHit.point, .1f);
+
+        //Universal_RaycastAssistance.instance.DrawRaycastGizmo(_getColliderPos() + -transform.forward * SkinWidth, Vector3.down, 1f);
+        //Universal_RaycastAssistance.instance.DrawRaycastGizmo(_getColliderPos() + transform.right * SkinWidth, Vector3.down, 1f);
+        //Universal_RaycastAssistance.instance.DrawRaycastGizmo(_getColliderPos() + -transform.right * SkinWidth, Vector3.down, 1f);
     }
     #region Slope
     private Vector3 _getSlopeRaycastPos()
@@ -208,8 +241,9 @@ public class RigidbodyBasedMovement : MonoBehaviour
         return Vector3.ProjectOnPlane(moveDir, slopeNormal);
     }
     #endregion
-    public Vector3 GetMoveDirection(Vector3 InputDirection, bool applyRotation = true)
+    public Vector3 GetMoveDirection(bool applyRotation = true)
     {
+        Vector3 InputDirection = input.GetMoveDirectionInput();
         float targetAngle = Mathf.Atan2(InputDirection.x, InputDirection.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
         float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
         if(/*InputDirection.z >= 0 && */applyRotation && !lockPlayerInput) transform.rotation = Quaternion.Euler(0f, angle, 0f);
@@ -218,87 +252,192 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
     public float PlayerHeightStanding = 1.85f;
     public float WalkingOnSlopesHeight = 1.2f;
+    public bool ProperFrontWorking = false;
     public bool ProperHeightWorking = false;
     public bool RaycastHitFromToYWorking = false;
+    [Header("newStuff")]
+    public float RaycastLength = 1f;
+    public float MaxWallHeight = .75f;
+    public float OffsetGroundCheckerY = .2f;
+    float MoveStairCooldown = .2f;
+    bool newStairArraived = false;
+    Vector3 lastStairPos = Vector3.zero;
+    Vector3 newStairPos;
+    float ProgressStair = 0f;
+    public SphereCollider groundCol;
     private void Movement()
     {
-        if (!canMove) return;
-        Vector3 InputDirection = new Vector3(input.Moveinput.x, 0f, input.Moveinput.y).normalized;
-        if (InputDirection.magnitude >= 0.01f)
+        Vector3 InputDirection = input.GetMoveDirectionInput();
+        if (InputDirection.magnitude > 0.01f)
         {
-            var moveDir = GetMoveDirection(InputDirection);
-            var feetPos = transform.position + new Vector3(0, -0.1f, 0f);
-            Universal_RaycastAssistance.instance.RaycastHitFromToZ(transform.position, -transform.up, new Vector3(0f, 1f,0f), transform.forward, 0.85f, .75f, 23, 1 << 8,out RaycastHit _FrontlowestHit,  out RaycastHit _FrontheighestHit);
-            ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(transform.position, _FrontheighestHit.point, transform.forward, 1f, groundMask, out RaycastHit _heightHit, 0f);
-            if (ProperHeightWorking)
+            
+            if (newStairArraived)
             {
-                RaycastHitFromToYWorking = Universal_RaycastAssistance.instance.RaycastHitFromToY(transform.position, transform.forward, 2.5f, transform.position.y, transform.position.y + 1.75f, 34, groundMask, out RaycastHit _lowestHit, out RaycastHit _heighestHit, .65f);
-                if (RaycastHitFromToYWorking)
+                //float lerpDuration = .2f;
+                if (ProgressStair < MoveStairCooldown - MoveStairCooldown / 100)
                 {
-                    PlayerHeight = WalkingOnSlopesHeight;
-                    if(Vector2.Dot(Vector2.up, _heightHit.normal) > .9f) gravity.ActiveGravity = false;
-                    //applay movement from current position to heighest hit
-                    Move(((_heighestHit.point + Vector3.up/* *Vector3.Distance(feetPos, _heighestHit.point)*/ * .6f) - transform.position).normalized, speed_Current, true);
+                     //rb.velocity = Vector3.zero;
 
+                    //gravity.ActiveGravity = false;
+
+                    rb.MovePosition(Vector3.Lerp(lastStairPos, newStairPos, ProgressStair / MoveStairCooldown));
+
+                    ProgressStair += Mathf.Clamp01(Time.fixedDeltaTime);
+                    //canMove = false;
                 }
                 else
                 {
-                    PlayerHeight = PlayerHeightStanding;
-                    //too high slope
-                    rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration);
-                    gravity.ActiveGravity = true;
+                    rb.position = newStairPos;
+                    //canMove = true;
+                    newStairArraived = false;
                 }
             }
-            else
+            #region old
+            /*if (!newStairArraived)
             {
-                PlayerHeight = PlayerHeightStanding;
-                gravity.ActiveGravity = true;
+                var forwardHitted = Physics.Raycast(_getColliderPos(0f, SkinWidth - OffsetGroundCheckerY) + GetMoveDirection(false) * SkinWidth, -transform.up, out RaycastHit forwardHit, RaycastLength, groundMask);
+                if (forwardHitted)
+                {
+                    var wallCheckHitted = Physics.Raycast(_getColliderPos(0f, MaxWallHeight) + GetMoveDirection(false) * SkinWidth, GetMoveDirection(false), out RaycastHit wallCheckHit, RaycastLength * (SkinWidth + .5f), groundMask);
+                    if (!wallCheckHitted && wallCheckHit.collider == null)
+                    {
+                        var groundCheckHitted = Physics.Raycast(_getColliderPos(0f, SkinWidth - OffsetGroundCheckerY) + GetMoveDirection(false) * SkinWidth, -transform.up, out RaycastHit groundCheckHit, Mathf.Infinity, groundMask);
+                        if (groundCheckHitted)
+                        {
+                            newStairPos = new Vector3(forwardHit.point.x, groundCheckHit.point.y, forwardHit.point.z) + GetMoveDirection(false) * 0.1f;
+                            lastStairPos = rb.position;
+                            gravity.ActiveGravity = false;
+                            newStairArraived = true;
+                            MoveStairCooldown = 20f / speed_Current;
+                            ProgressStair = 0f;
+                        }
+                    }
+                }
             }
-
-            //var hit = _getSlopeRaycasthit();
-
-
-            /*if (hit.normal.y < MaxSlope && isOnSlope())
+            if (newStairArraived)
             {
-                rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration); 
-                Debug.Log("Too high slope");
-            }
+                //float lerpDuration = .2f;
+                if (ProgressStair < MoveStairCooldown)
+                {
+                    rb.position = Vector3.Lerp(lastStairPos, newStairPos, ProgressStair / MoveStairCooldown);
+                    
+                    ProgressStair += Time.deltaTime;
+                    canMove = false;
+                }
+                else
+                {
+                    newStairArraived = false;
+                    gravity.ActiveGravity = true;
+                    canMove = true;
+                }
+            }*/
+            #endregion
+            if (!newStairArraived)
+            {
+                var feetPos = transform.position + new Vector3(0, -0.1f, 0f);
+                ProperFrontWorking = Universal_RaycastAssistance.instance.RaycastHitFromToZ(rb.position, -transform.up, new Vector3(0f, 0.87f, 0f), GetMoveDirection(false), 0.85f, .75f, 10, groundMask, out RaycastHit _FrontlowestHit,  out RaycastHit _FrontheighestHit);
+                if (ProperFrontWorking)
+                {
+                    ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _FrontheighestHit.point, GetMoveDirection(false), 1f, groundMask, out RaycastHit _heightHit, 0f);
+                    if (ProperHeightWorking)
+                    {
+                        RaycastHitFromToYWorking = Universal_RaycastAssistance.instance.RaycastHitFromToY(rb.position, GetMoveDirection(false), 1f, rb.position.y, rb.position.y + 1.5f, 20, groundMask, out RaycastHit _lowestHit, out RaycastHit _heighestHit, .65f);
+                        if (RaycastHitFromToYWorking)
+                        {
+                            //if (!newStairArraived) rb.position = newStairPos;
+                            groundCol.enabled = false;
+                            PlayerHeight = WalkingOnSlopesHeight;
+                            gravity.ActiveGravity = false;
+                            /*newStairPos = (_heighestHit.point + GetMoveDirection(false) * 0.075f);
+                            lastStairPos = rb.position;
+                            newStairArraived = true;
+                            MoveStairCooldown = 50f / speed_Current;
+                            ProgressStair = 0f;*/
+                           Move(((_heighestHit.point + GetMoveDirection(false) * 0.1f) - transform.position).normalized, speed_Current, true);
 
-            if(isOnSlope() && rb.velocity.y < 0 && _isGrounded && !_isJumping && hit.normal.y < DownWardMaxSlope)
-            {
-                Move(moveDir, speed_Current);
-                rb.velocity = new Vector3(rb.velocity.x * ForceForwardMultiplayFromToohighSlope, -.5f, rb.velocity.z * ForceForwardMultiplayFromToohighSlope);
-                Debug.Log("NormalMovement too hith slope");
-            }
-            else
-            if (isOnSlope() && !_isJumping && _isGrounded && hit.normal.y >= MaxSlope)
-            {
-                var NewmoveDir = get_slopeMoveDir(moveDir,_getSlopeRaycasthit().normal);
-                Move(NewmoveDir,speed_Current, true);
-                Debug.Log("Slope movement");
-            }
-            else*/ 
-            if(_isGrounded)
-            {
-                Move(moveDir, speed_Current);
-                Debug.Log("NormalMovement");
-            }
-            else if(!_isGrounded)
-            {
-                Move(moveDir, speed_Current * 0.75f);
-            }
+                        }
+                        else
+                        {
+                            PlayerHeight = PlayerHeightStanding;
+                            //too high slope
+                            if (!_isJumping) rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration);
+                            gravity.ActiveGravity = true;
+                            groundCol.enabled = true;
+                        }
+                    }
+                    else
+                    {
+                        PlayerHeight = PlayerHeightStanding;
+                        gravity.ActiveGravity = true;
+                        groundCol.enabled = true;
+                    }
+                }
+                else
+                {
+                    if(!_isJumping && _FrontheighestHit.point.y - rb.position.y < 0.01f) rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration);
+                    PlayerHeight = PlayerHeightStanding;
+                    gravity.ActiveGravity = true;
+                    groundCol.enabled = true;
+                }
+                if (!canMove) return;
+                var moveDir = GetMoveDirection();
+                #region old
+                //var hit = _getSlopeRaycasthit();
 
 
-            if(!isSprinting) anim.Play(WalkAnim);
+                /*if (hit.normal.y < MaxSlope && isOnSlope())
+                {
+                    rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration); 
+                    Debug.Log("Too high slope");
+                }
+
+                if(isOnSlope() && rb.velocity.y < 0 && _isGrounded && !_isJumping && hit.normal.y < DownWardMaxSlope)
+                {
+                    Move(moveDir, speed_Current);
+                    rb.velocity = new Vector3(rb.velocity.x * ForceForwardMultiplayFromToohighSlope, -.5f, rb.velocity.z * ForceForwardMultiplayFromToohighSlope);
+                    Debug.Log("NormalMovement too hith slope");
+                }
+                else
+                if (isOnSlope() && !_isJumping && _isGrounded && hit.normal.y >= MaxSlope)
+                {
+                    var NewmoveDir = get_slopeMoveDir(moveDir,_getSlopeRaycasthit().normal);
+                    Move(NewmoveDir,speed_Current, true);
+                    Debug.Log("Slope movement");
+                }
+                else*/
+                #endregion
+                if (_isGrounded)
+                {
+                    Move(moveDir, speed_Current);
+                    Debug.Log("NormalMovement");
+                }
+                else if (!_isGrounded)
+                {
+                    Move(moveDir, speed_Current * 0.75f);
+                }
+
+
+                if (!isSprinting) anim.Play(WalkAnim);
+            }
+           
+
+           
+
         }
         else
         {
             anim.Play(IdleAnim);
             PlayerHeight = PlayerHeightStanding;
-            //gravity.ActiveGravity = true;
+            #region stairReset
+            newStairPos = rb.position;
+            lastStairPos = rb.position;
+            newStairArraived = false;
+            ProgressStair = 0f;
+            gravity.ActiveGravity = true;
+            #endregion
             if (rb.velocity.y > 0 && !_isJumping)
             {
-                rb.velocity = new Vector3(0f, 0f, 0f);
+                rb.velocity = Vector3.zero;
             }
             else
             {
