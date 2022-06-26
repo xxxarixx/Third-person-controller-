@@ -334,6 +334,25 @@ public class RigidbodyBasedMovement : MonoBehaviour
             #endregion
             if (!newStairArraived)
             {
+
+                void _DownWardMovement(RaycastHit _FrontheighestHit)
+                {
+                    if (!_isJumping && _FrontheighestHit.point.y - rb.position.y < 0.01f && _isGrounded)
+                    {
+                        //rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration);
+                        ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + GetMoveDirection(false) * 0.1f, GetMoveDirection(false), 1f, groundMask, out RaycastHit _heightHit2, 0f);
+                        if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) > -0.2f)
+                        {
+                            Move(((_heightHit2.point + GetMoveDirection(false) * 0.1f /*+ Vector3.down * .05f*/) - transform.position).normalized, speed_Current, true);
+                        }
+                    }
+                    else
+                    {
+                        gravity.ActiveGravity = true;
+                        groundCol.enabled = true;
+                    }
+                }
+
                 var feetPos = transform.position + new Vector3(0, -0.1f, 0f);
                 ProperFrontWorking = Universal_RaycastAssistance.instance.RaycastHitFromToZ(rb.position, -transform.up, new Vector3(0f, 0.87f, 0f), GetMoveDirection(false), 0.85f, .75f, 10, groundMask, out RaycastHit _FrontlowestHit,  out RaycastHit _FrontheighestHit);
                 if (ProperFrontWorking)
@@ -360,9 +379,9 @@ public class RigidbodyBasedMovement : MonoBehaviour
                         {
                             PlayerHeight = PlayerHeightStanding;
                             //too high slope
-                            if (!_isJumping) rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration);
-                            gravity.ActiveGravity = true;
-                            groundCol.enabled = true;
+                            _DownWardMovement(_FrontheighestHit);
+                            //gravity.ActiveGravity = true;
+                            //groundCol.enabled = true;
                         }
                     }
                     else
@@ -374,10 +393,10 @@ public class RigidbodyBasedMovement : MonoBehaviour
                 }
                 else
                 {
-                    if(!_isJumping && _FrontheighestHit.point.y - rb.position.y < 0.01f) rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration);
-                    PlayerHeight = PlayerHeightStanding;
-                    gravity.ActiveGravity = true;
-                    groundCol.enabled = true;
+                    _DownWardMovement(_FrontheighestHit);
+                    //PlayerHeight = PlayerHeightStanding;
+                    //gravity.ActiveGravity = true;
+                    //groundCol.enabled = true;
                 }
                 if (!canMove) return;
                 var moveDir = GetMoveDirection();
