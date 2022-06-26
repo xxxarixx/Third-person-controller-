@@ -264,10 +264,12 @@ public class RigidbodyBasedMovement : MonoBehaviour
     Vector3 lastStairPos = Vector3.zero;
     Vector3 newStairPos;
     float ProgressStair = 0f;
+    bool pushOverride = false;
     public SphereCollider groundCol;
     private void Movement()
     {
         Vector3 InputDirection = input.GetMoveDirectionInput();
+        if (pushOverride) return;
         if (InputDirection.magnitude > 0.01f)
         {
             
@@ -340,14 +342,17 @@ public class RigidbodyBasedMovement : MonoBehaviour
                     if (!_isJumping && _FrontheighestHit.point.y - rb.position.y < 0.01f && _isGrounded)
                     {
                         //rb.AddForce(Vector3.down * 100f, ForceMode.Acceleration);
-                        ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + GetMoveDirection(false) * 0.1f, GetMoveDirection(false), 1f, groundMask, out RaycastHit _heightHit2, 0f);
-                        if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) > -0.2f)
+                        ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + GetMoveDirection(false) * 0.2f, GetMoveDirection(false), 1f, groundMask, out RaycastHit _heightHit2, 0f);
+                        if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) > -0.6f)
                         {
                             Move(((_heightHit2.point + GetMoveDirection(false) * 0.1f /*+ Vector3.down * .05f*/) - transform.position).normalized, speed_Current, true);
                         }
                     }
                     else
                     {
+                        ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + GetMoveDirection(false) * 0.2f, GetMoveDirection(false), 1f, groundMask, out RaycastHit _heightHit2, 0f);
+                        if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) <= -0.6f) rb.AddForce(GetMoveDirection(false) * 1000f * Time.fixedDeltaTime, ForceMode.Impulse);
+                        //Move(GetMoveDirection(false), 3f);
                         gravity.ActiveGravity = true;
                         groundCol.enabled = true;
                     }
@@ -571,9 +576,23 @@ public class RigidbodyBasedMovement : MonoBehaviour
         
     }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.gameObject.TryGetComponent(out Rigidbody _colRb))
+        {
+            //interactive obj
+            if(_colRb.velocity.magnitude > 0.01f)
+            {
+                //impacted with force
+                //reset gravity bcs it will impact player and propably will move him
+                gravity.ActiveGravity = true;
+                groundCol.enabled = true;
+            }
+        }
+    }
     //it getting array of points direction on sphere 
     #region Addons
-   
+
     #endregion
 }
 
