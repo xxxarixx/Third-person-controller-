@@ -69,17 +69,19 @@ public class testint : MonoBehaviour
                 if (Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _heighestHit.point, moveDirection, maxHeight, 1 << 8, out RaycastHit HeightHit, distanceForwardFromPlayer))
                 {
                     Gizmos.color = Color.white;
-                    Universal_RaycastAssistance.instance.RaycastHitFromToYGizmos(rb.position, moveDirection, Distance, rb.position.y, rb.position.y + destinationY, amount, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, DotMaxSlope);
-                    //if (Vector3.Angle(_lowestHit.point, _heighestHit.point) > MaxSlopeAngle) return;
-                    if (DebugFromFirstHitYPos)
+                    var yHit = Universal_RaycastAssistance.instance.RaycastHitFromToYGizmos(rb.position, moveDirection, Distance, rb.position.y, rb.position.y + destinationY, amount, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, DotMaxSlope);
+                    if (yHit)
                     {
-                        Gizmos.color = Color.magenta;
-                        Gizmos.DrawLine(_lowestHit.point + Vector3.up * FirstHitoffsetY, _heighestHit.point + rigidbodyBased.GetMoveDirection(false) * 0.05f);
-                    }
-                    else
-                    {
-                        Gizmos.color = Color.magenta;
-                        Gizmos.DrawLine(new Vector3(rb.position.x, _lowestHit.point.y, rb.position.z), _heighestHit.point + rigidbodyBased.GetMoveDirection(false) * 0.05f);
+                        if (DebugFromFirstHitYPos)
+                        {
+                            Gizmos.color = Color.magenta;
+                            Gizmos.DrawLine(_lowestHit.point + Vector3.up * FirstHitoffsetY, _heighestHit.point + rigidbodyBased.GetMoveDirection(false) * 0.05f);
+                        }
+                        else
+                        {
+                            Gizmos.color = Color.magenta;
+                            Gizmos.DrawLine(new Vector3(rb.position.x, _lowestHit.point.y, rb.position.z), _heighestHit.point + rigidbodyBased.GetMoveDirection(false) * 0.05f);
+                        }
                     }
                 }
                 break;

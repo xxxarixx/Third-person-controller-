@@ -111,7 +111,7 @@ public class Universal_RaycastAssistance
     /// 
     /// </summary>
     /// <param name="DotmaxAngle">closer to 1 means closer to flat gorund, closer to 0 means closer to something heigh</param>
-    public void RaycastHitFromToYGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, float _distance, float _from, float _to, int _amount, LayerMask _layerMask,Color _HitColor,Color _HeighestHitColor,Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit, float DotmaxAngle = 0f)
+    public bool RaycastHitFromToYGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, float _distance, float _from, float _to, int _amount, LayerMask _layerMask,Color _HitColor,Color _HeighestHitColor,Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit, float DotmaxAngle = 0f)
     {
         List<Vector3> _HitPositions = new List<Vector3>();
         List<Vector3> _NoneHitPositions = new List<Vector3>();
@@ -151,10 +151,10 @@ public class Universal_RaycastAssistance
         _heighestHit = _LastHeighestYHit;
         //Debug.Log(CalculateNormal(_lowestHit.point, _heighestHit.point));
         var _hittedHeighestHitGround = Physics.Raycast(_heighestHit.point + new Vector3(0f,0.05f,0f), Vector3.down, out RaycastHit _heighestHitGround, Mathf.Infinity, _layerMask);
-        if (!_hittedHeighestHitGround) return;
+        if (!_hittedHeighestHitGround) return false;
 
         Debug.Log(Vector2.Dot(Vector2.up, _heighestHitGround.normal));
-        if (Vector2.Dot(Vector2.up, _heighestHitGround.normal) < DotmaxAngle) return;
+        if (Vector2.Dot(Vector2.up, _heighestHitGround.normal) < DotmaxAngle) return false;
         foreach (var pos in _HitPositions)
         {
             Gizmos.color = _HitColor;
@@ -169,6 +169,7 @@ public class Universal_RaycastAssistance
         DrawRaycastGizmo(_lowestHitOrigin, _RaycastsDirection, _distance);
         Gizmos.color = _HeighestHitColor;
         DrawRaycastGizmo(_heighestHitOrigin, _RaycastsDirection, _distance);
+        return true;
     }
 
     public void RaycastHitFromToZGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask, Color _HitColor, Color _HeighestHitColor, Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit, float DotmaxAngle = 0f)
