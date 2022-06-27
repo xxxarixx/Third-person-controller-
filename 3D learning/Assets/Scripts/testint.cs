@@ -41,7 +41,7 @@ public class testint : MonoBehaviour
          Gizmos.DrawWireSphere(heighest, .3f);*/
         RaycastHit _lowestHit = new RaycastHit();
         RaycastHit _heighestHit = new RaycastHit();
-        var moveDirection = rigidbodyBased.GetMoveDirection(false);;
+        var moveDirection = rigidbodyBased.GetMoveDirection(false);
         if (!Application.isPlaying) moveDirection = transform.forward;
         switch (debugs)
         {
@@ -64,7 +64,7 @@ public class testint : MonoBehaviour
                 break;
             case Debugs.both:
 
-                Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, -transform.up, offset, moveDirection, DistanceZ, destinationZ, amountZ, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, DotMaxSlope);
+                Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, -transform.up, offset, moveDirection, DistanceZ, destinationZ, amountZ, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit);
                 Universal_RaycastAssistance.instance.IsItProperHeightGizmos(rb.position, _heighestHit.point, moveDirection, maxHeight, 1 << 8, distanceForwardFromPlayer);
                 if (Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _heighestHit.point, moveDirection, maxHeight, 1 << 8, out RaycastHit HeightHit, distanceForwardFromPlayer))
                 {
@@ -86,7 +86,7 @@ public class testint : MonoBehaviour
                 }
                 break;
             case Debugs.ForwardHitsZ:
-                Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, -transform.up, offset, moveDirection, Distance, destinationZ, amount, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, DotMaxSlope);
+                Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, -transform.up, offset, moveDirection, Distance, destinationZ, amount, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit);
                 break;
             default:
                 break;

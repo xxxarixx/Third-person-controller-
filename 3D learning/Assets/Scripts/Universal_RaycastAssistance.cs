@@ -172,7 +172,7 @@ public class Universal_RaycastAssistance
         return true;
     }
 
-    public void RaycastHitFromToZGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask, Color _HitColor, Color _HeighestHitColor, Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit, float DotmaxAngle = 0f)
+    public void RaycastHitFromToZGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask, Color _HitColor, Color _HeighestHitColor, Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit)
     {
         List<Vector3> _HitPositions = new List<Vector3>();
         List<Vector3> _NoneHitPositions = new List<Vector3>();
