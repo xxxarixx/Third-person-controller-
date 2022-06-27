@@ -206,8 +206,9 @@ public class RigidbodyBasedMovement : MonoBehaviour
         {
             
 
-            bool _DownWardMovement(RaycastHit _FrontheighestHit)
+            void _DownWardMovement(RaycastHit _FrontheighestHit, out bool AnyMovementApplied)
             {
+                AnyMovementApplied = false;
                 if (!_isJumping && _FrontheighestHit.point.y - rb.position.y < 0.01f && _isGrounded)
                 {
                     debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + GetMoveDirection(false) * 0.2f, GetMoveDirection(false), 1f, groundMask, out RaycastHit _heightHit2, 0f);
@@ -215,7 +216,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
                     {
                         Move(((_heightHit2.point + GetMoveDirection(false) * 0.1f /*+ Vector3.down * .05f*/) - transform.position).normalized, speed_Current, true);
                     }
-                    return true;
+                    AnyMovementApplied = true;
                 }
                 else
                 {
@@ -223,12 +224,11 @@ public class RigidbodyBasedMovement : MonoBehaviour
                     if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) <= -0.6f)
                     {
                         rb.AddForce(GetMoveDirection(false) * 1000f * Time.fixedDeltaTime, ForceMode.Impulse);
-                        return true;
+                        AnyMovementApplied = true;
                     }
                     gravity.ActiveGravity = true;
                     groundCol.enabled = true;
                 }
-                return false;
             }
 
             var feetPos = transform.position + new Vector3(0, -0.1f, 0f);
@@ -249,7 +249,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
                     else
                     {
                         //too high slope
-                        if (!_DownWardMovement(_FrontheighestHit))
+                        _DownWardMovement(_FrontheighestHit, out bool _anyMovementApplied);
+                        if (!_anyMovementApplied && _isGrounded)
                         {
                             Debug.Log("Applied Force Down");
                             rb.AddForce(Vector3.down * (50f * speed_Current) * Time.fixedDeltaTime, ForceMode.Acceleration);
@@ -264,11 +265,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
             }
             else
             {
-                if (!_DownWardMovement(_FrontheighestHit))
-                {
-                    Debug.Log("Applied Force Down");
-                    rb.AddForce(Vector3.down * (50f * speed_Current) * Time.fixedDeltaTime, ForceMode.Acceleration);
-                }
+                _DownWardMovement(_FrontheighestHit, out bool _anyMovementApplied);
             }
             if (!canMove) return;
             var moveDir = GetMoveDirection();
