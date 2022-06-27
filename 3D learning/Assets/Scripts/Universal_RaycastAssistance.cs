@@ -20,16 +20,18 @@ public class Universal_RaycastAssistance
         }
         return finalList.ToArray();
     }
-    public bool IsItProperHeight(Vector3 _feetPos, Vector3 _direction, float _maxheight, LayerMask _layerMask, out RaycastHit HeightHit, float _distanceFromDirection = .35f, float PlayerHeight = 2f)
+    public bool IsItProperHeight(Vector3 _feetPos, Vector3 RaycastPos, Vector3 _direction, float _maxheight, LayerMask _layerMask, out RaycastHit HeightHit, float _distanceFromDirection = .35f, float _playerHeight = 2f)
     {
         HeightHit = new RaycastHit();
-        bool _fronthitted = Physics.Raycast(_feetPos + new Vector3(0f, _maxheight, 0f), _direction, out RaycastHit _frontHit, _distanceFromDirection, _layerMask);
+        bool _fronthitted = Physics.Raycast(RaycastPos + new Vector3(0f, _maxheight, 0f), _direction, out RaycastHit _frontHit, _distanceFromDirection, _layerMask);
         if (!_fronthitted)
         {
-            var _downHitted = Physics.Raycast(_feetPos + new Vector3(0f, PlayerHeight, 0f) + _direction.normalized * _distanceFromDirection, Vector3.down, out RaycastHit _downHit, Mathf.Infinity, _layerMask);
+            var _downHitted = Physics.Raycast(RaycastPos + new Vector3(0f, _playerHeight, 0f) + _direction.normalized * _distanceFromDirection, Vector3.down, out RaycastHit _downHit, Mathf.Infinity, _layerMask);
             if (_downHitted)
             {
-                if (_downHit.point.y - _feetPos.y > 0.05f && _downHit.point.y < _feetPos.y + _maxheight)
+                Physics.Raycast(_feetPos + new Vector3(0f, _playerHeight, 0f), Vector3.down, out RaycastHit _feetHit, Mathf.Infinity, _layerMask);
+                Debug.Log($"Height hit checker {_downHit.point.y - _feetPos.y} is heigher then 0.1f");
+                if (/*_downHit.point.y - _feetHit.point.y > 0.1f &&*/ _downHit.point.y < _feetHit.point.y + _maxheight)
                 {
                     HeightHit = _downHit;
                     return true;
@@ -38,18 +40,19 @@ public class Universal_RaycastAssistance
         }
         return false;
     }
-    public void IsItProperHeightGizmos(Vector3 _feetPos, Vector3 _direction, float _maxheight, LayerMask _layerMask, float _distanceFromDirection = .35f, float _playerHeight = 2f)
+    public void IsItProperHeightGizmos(Vector3 _feetPos, Vector3 RaycastPos, Vector3 _direction, float _maxheight, LayerMask _layerMask, float _distanceFromDirection = .35f, float _playerHeight = 2f)
     {
-        bool _fronthitted = Physics.Raycast(_feetPos + new Vector3(0f, _maxheight, 0f), _direction, out RaycastHit _frontHit, _distanceFromDirection, _layerMask);
+        bool _fronthitted = Physics.Raycast(RaycastPos + new Vector3(0f, _maxheight, 0f), _direction, out RaycastHit _frontHit, _distanceFromDirection, _layerMask);
         Gizmos.color = Color.white;
-        DrawRaycastGizmo(_feetPos + new Vector3(0f, _maxheight, 0f),_direction,_distanceFromDirection);
+        DrawRaycastGizmo(RaycastPos + new Vector3(0f, _maxheight, 0f),_direction,_distanceFromDirection);
         if (!_fronthitted)
         {
-            var _downHitted = Physics.Raycast(_feetPos + new Vector3(0f, _playerHeight, 0f) + _direction.normalized * _distanceFromDirection, Vector3.down, out RaycastHit _downHit, Mathf.Infinity, _layerMask);
-            DrawRaycastGizmo(_feetPos + new Vector3(0f, _playerHeight, 0f) + _direction.normalized * _distanceFromDirection, Vector3.down, 50f);
+            var _downHitted = Physics.Raycast(RaycastPos + new Vector3(0f, _playerHeight, 0f) + _direction.normalized * _distanceFromDirection, Vector3.down, out RaycastHit _downHit, Mathf.Infinity, _layerMask);
+            DrawRaycastGizmo(RaycastPos + new Vector3(0f, _playerHeight, 0f) + _direction.normalized * _distanceFromDirection, Vector3.down, 50f);
             if (_downHitted)
             {
-                if (_downHit.point.y - _feetPos.y > 0.05f && _downHit.point.y < _feetPos.y + _maxheight)
+                Physics.Raycast(_feetPos + new Vector3(0f, _playerHeight, 0f), Vector3.down, out RaycastHit _feetHit, Mathf.Infinity, _layerMask);
+                if (/*_downHit.point.y - _feetHit.point.y > 0.1f &&*/ _downHit.point.y < _feetHit.point.y + _maxheight)
                 {
                     Gizmos.color = Color.green;
                     Gizmos.DrawSphere(_downHit.point, .1f);
@@ -108,7 +111,7 @@ public class Universal_RaycastAssistance
     /// 
     /// </summary>
     /// <param name="DotmaxAngle">closer to 1 means closer to flat gorund, closer to 0 means closer to something heigh</param>
-    public void RaycastHitFromToYGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, float _distance, float _from, float _to, int _amount, LayerMask _layerMask,Color _HitColor,Color _HeighestHitColor,Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit, float DotmaxAngle = 0f)
+    public bool RaycastHitFromToYGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, float _distance, float _from, float _to, int _amount, LayerMask _layerMask,Color _HitColor,Color _HeighestHitColor,Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit, float DotmaxAngle = 0f)
     {
         List<Vector3> _HitPositions = new List<Vector3>();
         List<Vector3> _NoneHitPositions = new List<Vector3>();
@@ -148,14 +151,10 @@ public class Universal_RaycastAssistance
         _heighestHit = _LastHeighestYHit;
         //Debug.Log(CalculateNormal(_lowestHit.point, _heighestHit.point));
         var _hittedHeighestHitGround = Physics.Raycast(_heighestHit.point + new Vector3(0f,0.05f,0f), Vector3.down, out RaycastHit _heighestHitGround, Mathf.Infinity, _layerMask);
-        if (!_hittedHeighestHitGround) return;
+        if (!_hittedHeighestHitGround) return false;
 
         Debug.Log(Vector2.Dot(Vector2.up, _heighestHitGround.normal));
-        if (Vector2.Dot(Vector2.up, _heighestHitGround.normal) < DotmaxAngle) return;
-        if(_HitPositions.Contains(_lowestHitOrigin)) _HitPositions.RemoveAt(_HitPositions.IndexOf(_lowestHitOrigin));
-        if (_HitPositions.Contains(_heighestHitOrigin)) _HitPositions.RemoveAt(_HitPositions.IndexOf(_heighestHitOrigin));
-        if (_NoneHitPositions.Contains(_lowestHitOrigin)) _NoneHitPositions.RemoveAt(_NoneHitPositions.IndexOf(_lowestHitOrigin));
-        if (_NoneHitPositions.Contains(_heighestHitOrigin)) _NoneHitPositions.RemoveAt(_NoneHitPositions.IndexOf(_heighestHitOrigin));
+        if (Vector2.Dot(Vector2.up, _heighestHitGround.normal) < DotmaxAngle) return false;
         foreach (var pos in _HitPositions)
         {
             Gizmos.color = _HitColor;
@@ -170,6 +169,105 @@ public class Universal_RaycastAssistance
         DrawRaycastGizmo(_lowestHitOrigin, _RaycastsDirection, _distance);
         Gizmos.color = _HeighestHitColor;
         DrawRaycastGizmo(_heighestHitOrigin, _RaycastsDirection, _distance);
+        return true;
+    }
+
+    public void RaycastHitFromToZGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask, Color _HitColor, Color _HeighestHitColor, Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit, float DotmaxAngle = 0f)
+    {
+        List<Vector3> _HitPositions = new List<Vector3>();
+        List<Vector3> _NoneHitPositions = new List<Vector3>();
+        float _lastLowestZHitPos = float.MaxValue;
+        Vector3 _lastLowestZHitOrigin = new Vector3();
+        RaycastHit _LastlowestZhit = new RaycastHit();
+        float _LastHeighestZHitPos = float.MinValue;
+        Vector3 _LastHeighestZHitOrigin = new Vector3();
+        RaycastHit _LastHeighestZHit = new RaycastHit();
+        foreach (var _zValue in GetBetweenValues(0, _to, _amount))
+        {
+            Debug.Log(_zValue);
+            Vector3 origin = facingDirection * _zValue +  new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) + offset;
+            bool hitted = Physics.Raycast(origin, _RaycastsDirection, out RaycastHit hit, _distance, _layerMask);
+            if (hitted)
+            {
+                _HitPositions.Add(origin);
+                var posDiff = Mathf.Abs(hit.point.z - _startPosition.z);
+                if (posDiff < _lastLowestZHitPos)
+                {
+                    _lastLowestZHitPos = posDiff;
+                    _lastLowestZHitOrigin = origin;
+                    _LastlowestZhit = hit;
+                }
+
+                if (posDiff > _LastHeighestZHitPos)
+                {
+                    _LastHeighestZHitPos = posDiff;
+                    _LastHeighestZHitOrigin = origin;
+                    _LastHeighestZHit = hit;
+                }
+
+            }
+            else
+            {
+                _NoneHitPositions.Add(origin);
+            }
+
+        }
+        var _lowestHitOrigin = _lastLowestZHitOrigin;
+        var _heighestHitOrigin = _LastHeighestZHitOrigin;
+        _lowestHit = _LastlowestZhit;
+        _heighestHit = _LastHeighestZHit;
+        //Debug.Log(CalculateNormal(_lowestHit.point, _heighestHit.point));
+        //var _hittedHeighestHitGround = Physics.Raycast(_heighestHit.point + new Vector3(0f, 0.05f, 0f), Vector3.down, out RaycastHit _heighestHitGround, Mathf.Infinity, _layerMask);
+        //if (!_hittedHeighestHitGround) return;
+
+        //Debug.Log(Vector2.Dot(Vector2.up, _heighestHitGround.normal));
+        //if (Vector2.Dot(Vector2.up, _heighestHitGround.normal) < DotmaxAngle) return;
+        foreach (var pos in _HitPositions)
+        {
+            Gizmos.color = _HitColor;
+            DrawRaycastGizmo(pos, _RaycastsDirection, _distance);
+        }
+        foreach (var pos in _NoneHitPositions)
+        {
+            Gizmos.color = Color.white;
+            DrawRaycastGizmo(pos, _RaycastsDirection, _distance);
+        }
+        Gizmos.color = _LowestHitColor;
+        DrawRaycastGizmo(_lowestHitOrigin, _RaycastsDirection, _distance);
+        Gizmos.color = _HeighestHitColor;
+        DrawRaycastGizmo(_heighestHitOrigin, _RaycastsDirection, _distance);
+    }
+    public bool RaycastHitFromToZ(Vector3 _startPosition, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask,out RaycastHit _lowestHit, out RaycastHit _heighestHit)
+    {
+        float _lastLowestZHitPos = float.MaxValue;
+        RaycastHit _LastlowestZhit = new RaycastHit();
+        float _LastHeighestZHitPos = float.MinValue;
+        RaycastHit _LastHeighestZHit = new RaycastHit();
+        bool startHitted = false;
+        foreach (var _zValue in GetBetweenValues(0, _to, _amount))
+        {
+            Debug.Log(_zValue);
+            Vector3 origin = facingDirection * _zValue + new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) + offset;
+            bool hitted = Physics.Raycast(origin, _RaycastsDirection, out RaycastHit hit, _distance, _layerMask);
+            if (!hitted) continue;
+            startHitted = true;
+            if (startHitted && !hitted) break;
+            var posDiff = Mathf.Abs(hit.point.z - _startPosition.z);
+            if (posDiff < _lastLowestZHitPos)
+            {
+                _lastLowestZHitPos = posDiff;
+                _LastlowestZhit = hit;
+            }
+
+            if (posDiff > _LastHeighestZHitPos)
+            {
+                _LastHeighestZHitPos = posDiff;
+                _LastHeighestZHit = hit;
+            }
+        }
+        _lowestHit = _LastlowestZhit;
+        _heighestHit = _LastHeighestZHit;
+        return startHitted && _heighestHit.point.y - _startPosition.y > 0.01f;
     }
     private Vector2 CalculateNormal(Vector2 v1,Vector2 v2)
     {

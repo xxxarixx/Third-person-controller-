@@ -19,6 +19,9 @@ public class AnimationsCurveCreator : MonoBehaviour
         public AnimationCurve Repainted_RightFootCurve;
         private void Awake()
         {
+            #if UNITY_EDITOR
+
+
             leftFoot = SkeletonAnimator.GetBoneTransform(HumanBodyBones.LeftFoot);
             rightFoot = SkeletonAnimator.GetBoneTransform(HumanBodyBones.RightFoot);
             Debug.Log(leftFoot.name);
@@ -68,7 +71,7 @@ public class AnimationsCurveCreator : MonoBehaviour
             }
             Repainted_LeftFootCurve.AddKey(LeftFootCurve[heighestKeyID].time, LeftFootCurve[heighestKeyID].value);
             Repainted_LeftFootCurve.AddKey(LeftFootCurve[LowestKeyID].time, LeftFootCurve[LowestKeyID].value);
-
+            #endif
         }
     }
 
