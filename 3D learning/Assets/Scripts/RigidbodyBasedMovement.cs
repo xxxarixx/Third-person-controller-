@@ -12,17 +12,25 @@ public class RigidbodyBasedMovement : MonoBehaviour
     [SerializeField] private Cinemachine.CinemachineFreeLook cinemachineCam;
 
     [Header("PlayerParts")]
-    [SerializeField] private CapsuleCollider playerCollision;
-    [SerializeField] private SphereCollider groundCollision;
     [SerializeField] private Transform cam;
+    [SerializeField] private bool debug_DrawGroundedSize = false;
+    [Header("Collisions")]
+    [SerializeField] private CapsuleCollider playerCollision;
+    [SerializeField] private Vector3 playerCollision_offset = Vector3.zero;
+    [SerializeField] private float playerCollision_radius = .3f;
+    [SerializeField] private float playerCollision_height = 1.25f;
+    [SerializeField] private SphereCollider groundCollision;
+    [SerializeField] private Vector3 groundCollision_offset = Vector3.zero;
+    [SerializeField] private float groundCollision_radius = .5f;
+
     [Header("Casual movement")]
-    [SerializeField] private float playerHeight = 1.25f;
     [SerializeField] private float speed = 100f;
     [SerializeField] private float sprintSpeed = 275f;
     [SerializeField] private float turnSmoothTime = 0.1f;
-    private float _turnSmoothVelocity;
     public float speed_Current { get;private set; }
+    private float _turnSmoothVelocity;
     private bool _isSprinting;
+
     [Header("Jump")]
     [SerializeField] private LayerMask groundMask;
     [SerializeField] private float groundDistance = 0.4f;
@@ -31,43 +39,37 @@ public class RigidbodyBasedMovement : MonoBehaviour
 
     [Header("Slopes/Stairs")]
     [SerializeField] private float slopeCheckerSize = 1f;
-    [SerializeField] private float skinWidth = .3f;
     [Range(.1f,1f), SerializeField] private float slopeMaxSize = .6f;
-
-
+    [SerializeField] private float obstacleMaxSize = .5f;
+    [SerializeField] private int frontAmount = 10;
+    [SerializeField] private int topAmount = 15;
     [SerializeField] private bool debug_ProperFrontWorking = false;
     [SerializeField] private bool debug_ProperHeightWorking = false;
     [SerializeField] private bool debug_RaycastHitFromToYWorking = false;
 
     [Header("Animations")]
-    [SerializeField] private string anim_run;
     [SerializeField] private string anim_idle;
     [SerializeField] private string anim_walk;
-    private bool _canMove = true;
+    [SerializeField] private string anim_run;
+
     [Header("Teleport player from void")]
     [SerializeField] private float teleportWhenPlayerYEqual = -10f;
     private Vector3 _startingPosition;
     private bool _lockPlayerInput;
 
 
-
+    #region Default Functions
     private void Awake()
     {
         instance = this;
     }
     private void Start()
     {
-        speed_Current = speed;
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-        _canMove = true;
-        playerCollision.height = playerHeight;
+        _GroundCollision_Customize(groundCollision_offset, groundCollision_radius);
+        _PlayerCollision_Customize(playerCollision_offset, playerCollision_radius, playerCollision_height);
+        _SetupCursor();
         _startingPosition = transform.position;
-        var YPositions = Universal_RaycastAssistance.instance.GetBetweenValues(.5f,4.5f,12);
-        foreach (var yPos in YPositions)
-        {
-            Debug.Log($"YPos: {yPos}");
-        }
+        speed_Current = speed;
 
     }
     private void Update()
@@ -90,7 +92,6 @@ public class RigidbodyBasedMovement : MonoBehaviour
         {
             transform.position = _startingPosition;
         }
-
     }
     private void FixedUpdate()
     {
@@ -98,26 +99,13 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
-        playerCollision.height = playerHeight;
-
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(_GetFeetPos(), groundDistance);
-
-        var moveDirection = GetMoveDirection(false);
-        if (!Application.isPlaying) moveDirection = transform.forward;
-
-        Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, -transform.up, new Vector3(0f, 0.87f, 0f), moveDirection, 0.85f, .75f, 10, groundMask, Color.red, Color.blue, Color.yellow, out RaycastHit _lowestHit, out RaycastHit _heighestHit);
-        Universal_RaycastAssistance.instance.IsItProperHeightGizmos(rb.position, _heighestHit.point, moveDirection, 1f, groundMask, 0f);
-        if (Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _heighestHit.point, moveDirection, 1f, groundMask, out RaycastHit HeightHit, 0f))
-        {
-            Gizmos.color = Color.white;
-            var yHit = Universal_RaycastAssistance.instance.RaycastHitFromToYGizmos(rb.position, moveDirection, 1f, rb.position.y, rb.position.y + 1.5f, 20, groundMask, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, slopeMaxSize);
-            if (yHit)
-            {
-                Gizmos.color = Color.magenta;
-                Gizmos.DrawLine(new Vector3(rb.position.x, _lowestHit.point.y, rb.position.z), _heighestHit.point + GetMoveDirection(false) * 0.05f);
-            }
-        }
+        Gizmos.color = Color.gray;
+        Gizmos.DrawWireCube(_GetHeadPlayerCollisionPosition(), Vector3.one * .1f);
+        _PlayerCollision_Customize(playerCollision_offset, playerCollision_radius, playerCollision_height);
+        _GroundCollision_Customize(groundCollision_offset, groundCollision_radius);
+        _Movement_Debug(0f);
+        //_Movement_Debug(30f);
+        //_Movement_Debug(-30f);
     }
     private void OnCollisionEnter(Collision collision)
     {
@@ -133,9 +121,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
             }
         }
     }
-   
-
-
+    #endregion
+    #region Public Functions
     public void LocklockPlayerInput(bool EnableLock, bool InteractOnVCam = false)
     {
         _lockPlayerInput = EnableLock;
@@ -167,7 +154,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
     {
         transform.position = newPos;
     }
-
+    #endregion
+    #region Private Functions
     private void _Movement()
     {
         Vector3 InputDirection = input.GetMoveDirectionInput();
@@ -175,68 +163,84 @@ public class RigidbodyBasedMovement : MonoBehaviour
         {
             
 
-            void _DownWardMovement(RaycastHit _FrontheighestHit, out bool AnyMovementApplied)
+            void _DownWardMovement(RaycastHit _FrontheighestHit,Vector3 moveDirection, out bool AnyMovementApplied)
             {
+                Debug.Log("Applied DownMovement");
                 AnyMovementApplied = false;
                 if (!_isJumping && _FrontheighestHit.point.y - rb.position.y < 0.01f && _isGrounded)
                 {
-                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + GetMoveDirection(false) * 0.2f, GetMoveDirection(false), 1f, groundMask, out RaycastHit _heightHit2, 0f);
+                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, 1f, groundMask, out RaycastHit _heightHit2, 0f);
                     if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) > -0.6f)
                     {
-                        Move(((_heightHit2.point + GetMoveDirection(false) * 0.1f /*+ Vector3.down * .05f*/) - transform.position).normalized, speed_Current, true);
+                        Move(((_heightHit2.point + moveDirection * 0.1f /*+ Vector3.down * .05f*/) - transform.position).normalized, speed_Current, true);
                     }
                     AnyMovementApplied = true;
                 }
                 else
                 {
-                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + GetMoveDirection(false) * 0.2f, GetMoveDirection(false), 1f, groundMask, out RaycastHit _heightHit2, 0f);
+                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, 1f, groundMask, out RaycastHit _heightHit2, 0f);
                     if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) <= -0.6f)
                     {
                         rb.AddForce(GetMoveDirection(false) * 1000f * Time.fixedDeltaTime, ForceMode.Impulse);
                         AnyMovementApplied = true;
                     }
-                    gravity.ActiveGravity = true;
                     groundCollision.enabled = true;
+                    gravity.ActiveGravity = true;
                 }
             }
-
-            var feetPos = transform.position + new Vector3(0, -0.1f, 0f);
-            debug_ProperFrontWorking = Universal_RaycastAssistance.instance.RaycastHitFromToZ(rb.position, -transform.up, new Vector3(0f, 0.87f, 0f), GetMoveDirection(false), 0.85f, .75f, 10, groundMask, out RaycastHit _FrontlowestHit,  out RaycastHit _FrontheighestHit);
-            if (debug_ProperFrontWorking)
+            void _WholeObstacleChecker(float offsetMoveYAngle)
             {
-                debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _FrontheighestHit.point, GetMoveDirection(false), 1f, groundMask, out RaycastHit _heightHit, 0f);
-                if (debug_ProperHeightWorking)
+                var moveDirection = Quaternion.Euler(0f, offsetMoveYAngle, 0f) * GetMoveDirection();
+                debug_ProperFrontWorking = Universal_RaycastAssistance.instance.RaycastHitFromToZ(_GetRaycastCollisonStartPos(), -transform.up, Vector3.up * obstacleMaxSize, moveDirection, obstacleMaxSize, .75f, frontAmount, groundMask, out RaycastHit _FrontlowestHit, out RaycastHit _FrontheighestHit);
+                if (debug_ProperFrontWorking)
                 {
-                    debug_RaycastHitFromToYWorking = Universal_RaycastAssistance.instance.RaycastHitFromToY(rb.position, GetMoveDirection(false), 1f, rb.position.y, rb.position.y + 1.5f, 20, groundMask, out RaycastHit _lowestHit, out RaycastHit _heighestHit, slopeMaxSize);
-                    if (debug_RaycastHitFromToYWorking)
+                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _FrontheighestHit.point, moveDirection, 1f, groundMask, out RaycastHit _heightHit, 0f);
+                    if (debug_ProperHeightWorking)
                     {
-                        groundCollision.enabled = false;
-                        gravity.ActiveGravity = false;
-                        Move(((_heighestHit.point + GetMoveDirection(false) * 0.1f) - transform.position).normalized, speed_Current, true);
+                        debug_RaycastHitFromToYWorking = Universal_RaycastAssistance.instance.RaycastHitFromToY(rb.position, moveDirection, 1f, rb.position.y, rb.position.y + obstacleMaxSize, topAmount, groundMask, out RaycastHit _lowestHit, out RaycastHit _heighestHit, slopeMaxSize);
+                        if (debug_RaycastHitFromToYWorking)
+                        {
+                            groundCollision.enabled = false;
+                            gravity.ActiveGravity = false;
+                            Move(((_heighestHit.point + moveDirection * 0.1f) - rb.position).normalized, speed_Current, true);
 
+                            if (Physics.Raycast(_GetHeadPlayerCollisionPosition(), Vector3.down, out RaycastHit _noneGroundColYCheck_hit, 2f, groundMask))
+                            {
+                                if (rb.position.y < _noneGroundColYCheck_hit.point.y)
+                                {
+                                    rb.position = new Vector3(rb.position.x, Mathf.Lerp(rb.position.y, _noneGroundColYCheck_hit.point.y, Time.deltaTime * 10f), rb.position.z);
+                                }
+                            }
+                            Debug.Log("Applied 3check force");
+                        }
+                        else
+                        {
+                            //too high slope
+                            _DownWardMovement(_FrontheighestHit, moveDirection, out bool _anyMovementApplied);
+                            if (!_anyMovementApplied && _isGrounded)
+                            {
+                                Debug.Log("Applied Force Down");
+                                rb.AddForce(Vector3.down * (50f * speed_Current) * Time.fixedDeltaTime, ForceMode.Acceleration);
+                            }
+                        }
                     }
                     else
                     {
-                        //too high slope
-                        _DownWardMovement(_FrontheighestHit, out bool _anyMovementApplied);
-                        if (!_anyMovementApplied && _isGrounded)
-                        {
-                            Debug.Log("Applied Force Down");
-                            rb.AddForce(Vector3.down * (50f * speed_Current) * Time.fixedDeltaTime, ForceMode.Acceleration);
-                        }
+                        groundCollision.enabled = true;
+                        gravity.ActiveGravity = true;
+                        debug_RaycastHitFromToYWorking = false;
                     }
                 }
                 else
                 {
-                    gravity.ActiveGravity = true;
-                    groundCollision.enabled = true;
+                    _DownWardMovement(_FrontheighestHit, moveDirection, out bool _anyMovementApplied);
+                    debug_ProperHeightWorking = false;
+                    debug_RaycastHitFromToYWorking = false;
                 }
             }
-            else
-            {
-                _DownWardMovement(_FrontheighestHit, out bool _anyMovementApplied);
-            }
-            if (!_canMove) return;
+            _WholeObstacleChecker(0f);
+            //_WholeObstacleChecker(-30f);
+            //_WholeObstacleChecker(30f);
             var moveDir = GetMoveDirection();
             if (_isGrounded)
             {
@@ -260,6 +264,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         {
             anim.Play(anim_idle);
             #region stairReset
+            groundCollision.enabled = true;
             gravity.ActiveGravity = true;
             #endregion
             if (rb.velocity.y > 0 && !_isJumping)
@@ -280,7 +285,62 @@ public class RigidbodyBasedMovement : MonoBehaviour
     {
         return playerCollision.bounds.center - new Vector3(0f, playerCollision.bounds.size.y / 2, 0f) + new Vector3(offsetX, offsetY, offsetZ);
     }
-    
+    private void _GroundCollision_Customize(Vector3 _centerOffset, float _radius)
+    {
+        if (groundCollision == null) { Debug.LogError("groundCollision NULL");  return; }
+
+        groundCollision.center = _centerOffset;
+        groundCollision.radius = _radius;
+    }
+    private void _PlayerCollision_Customize(Vector3 _centerOffset, float _radius, float _height)
+    {
+        if (groundCollision == null) { Debug.LogError("groundCollision NULL"); return; }
+        Vector3 a = _centerOffset + Vector3.up * _height / 2 + Vector3.up * groundCollision_radius/*+ Vector3.up * obstacleMaxSize + Vector3.up * 0.025f*/;
+        playerCollision.center = a;
+        playerCollision.radius = _radius;
+        playerCollision.height = _height;
+    }
+    private Vector3 _GetHeadPlayerCollisionPosition(float xOffset = 0f, float yOffset = 0f, float zOffset = 0f)
+    {
+        return rb.position + Vector3.up * (2 * groundCollision_radius) + playerCollision_offset + Vector3.up * playerCollision_height + new Vector3(xOffset,yOffset,zOffset);
+    }
+    private Vector3 _GetRaycastCollisonStartPos() 
+    {
+        return groundCollision.transform.position + groundCollision_offset - (groundCollision_radius) * Vector3.up + .075f * Vector3.up;
+    }
+    private void _SetupCursor() 
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+    private void _Movement_Debug(float offsetAngleY)
+    {
+        if (debug_DrawGroundedSize)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(_GetFeetPos(), groundDistance);
+        }
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(_GetRaycastCollisonStartPos(), .05f);
+
+        var moveDirection = Quaternion.Euler(0f, offsetAngleY, 0f) * GetMoveDirection(false);
+        if (!Application.isPlaying) moveDirection = Quaternion.Euler(0f, offsetAngleY, 0f) * transform.forward;
+
+        Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(_GetRaycastCollisonStartPos(), -transform.up, Vector3.up * obstacleMaxSize, moveDirection, obstacleMaxSize, .75f, frontAmount, groundMask, Color.red, Color.blue, Color.yellow, out RaycastHit _lowestHit, out RaycastHit _heighestHit);
+        Universal_RaycastAssistance.instance.IsItProperHeightGizmos(rb.position, _heighestHit.point, moveDirection, 1f, groundMask, 0f);
+        if (Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _heighestHit.point, moveDirection, 1f, groundMask, out RaycastHit HeightHit, 0f))
+        {
+            Gizmos.color = Color.white;
+            var yHit = Universal_RaycastAssistance.instance.RaycastHitFromToYGizmos(rb.position, moveDirection, 1f, rb.position.y, rb.position.y + obstacleMaxSize, topAmount, groundMask, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, slopeMaxSize);
+            if (yHit)
+            {
+                Gizmos.color = Color.magenta;
+                Gizmos.DrawLine(new Vector3(rb.position.x, _lowestHit.point.y, rb.position.z), _heighestHit.point + moveDirection * 0.05f);
+            }
+        }
+    }
+
+    #endregion
 }
 
 

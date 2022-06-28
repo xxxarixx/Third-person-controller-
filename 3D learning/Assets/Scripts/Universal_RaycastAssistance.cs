@@ -30,7 +30,7 @@ public class Universal_RaycastAssistance
             if (_downHitted)
             {
                 Physics.Raycast(_feetPos + new Vector3(0f, _playerHeight, 0f), Vector3.down, out RaycastHit _feetHit, Mathf.Infinity, _layerMask);
-                Debug.Log($"Height hit checker {_downHit.point.y - _feetPos.y} is heigher then 0.1f");
+                //Debug.Log($"Height hit checker {_downHit.point.y - _feetPos.y} is heigher then 0.1f");
                 if (/*_downHit.point.y - _feetHit.point.y > 0.1f &&*/ _downHit.point.y < _feetHit.point.y + _maxheight)
                 {
                     HeightHit = _downHit;
@@ -184,10 +184,10 @@ public class Universal_RaycastAssistance
         RaycastHit _LastHeighestZHit = new RaycastHit();
         foreach (var _zValue in GetBetweenValues(0, _to, _amount))
         {
-            Debug.Log(_zValue);
-            Vector3 origin = facingDirection * _zValue +  new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) + offset;
+           // Debug.Log(_zValue);
+            Vector3 origin = facingDirection * _zValue + new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) + offset;
             bool hitted = Physics.Raycast(origin, _RaycastsDirection, out RaycastHit hit, _distance, _layerMask);
-            if (hitted)
+            if (hitted && hit.point.y - _startPosition.y > 0.01f)
             {
                 _HitPositions.Add(origin);
                 var posDiff = Mathf.Abs(hit.point.z - _startPosition.z);
@@ -204,7 +204,6 @@ public class Universal_RaycastAssistance
                     _LastHeighestZHitOrigin = origin;
                     _LastHeighestZHit = hit;
                 }
-
             }
             else
             {
@@ -246,7 +245,7 @@ public class Universal_RaycastAssistance
         bool startHitted = false;
         foreach (var _zValue in GetBetweenValues(0, _to, _amount))
         {
-            Debug.Log(_zValue);
+            //Debug.Log(_zValue);
             Vector3 origin = facingDirection * _zValue + new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) + offset;
             bool hitted = Physics.Raycast(origin, _RaycastsDirection, out RaycastHit hit, _distance, _layerMask);
             if (!hitted) continue;
@@ -267,6 +266,7 @@ public class Universal_RaycastAssistance
         }
         _lowestHit = _LastlowestZhit;
         _heighestHit = _LastHeighestZHit;
+        //Debug.Log($"startHitted:{startHitted} && {_heighestHit.point.y - _startPosition.y} > 0.01f");
         return startHitted && _heighestHit.point.y - _startPosition.y > 0.01f;
     }
     private Vector2 CalculateNormal(Vector2 v1,Vector2 v2)

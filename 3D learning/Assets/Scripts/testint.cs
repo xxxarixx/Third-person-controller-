@@ -86,7 +86,7 @@ public class testint : MonoBehaviour
                 }
                 break;
             case Debugs.ForwardHitsZ:
-                Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, -transform.up, offset, moveDirection, Distance, destinationZ, amount, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit);
+                Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, -transform.up, offset, moveDirection, DistanceZ, destinationZ, amountZ, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit);
                 break;
             default:
                 break;
