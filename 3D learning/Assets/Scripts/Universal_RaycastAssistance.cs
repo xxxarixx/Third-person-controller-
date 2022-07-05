@@ -20,11 +20,11 @@ public class Universal_RaycastAssistance
         }
         return finalList.ToArray();
     }
-    public bool IsItProperHeight(Vector3 _feetPos, Vector3 RaycastPos, Vector3 _direction, float _maxheight, float _maxLengthFromPlayerToObstacle, LayerMask _layerMask, out RaycastHit HeightHit, float _distanceFromDirection = .35f, float _playerHeight = 2f)
+    public bool IsItProperHeight(Vector3 _feetPos, Vector3 RaycastPos, Vector3 _direction, float _maxheight, float _maxLengthFromPlayerToObstacle, LayerMask _layerMask, float _dotMaxAngle, out RaycastHit HeightHit, float _distanceFromDirection = .35f, float _playerHeight = 2f)
     {
         HeightHit = new RaycastHit();
         var _raycastPosWHeight = RaycastPos + new Vector3(0f, _playerHeight, 0f);
-        var _playerRaycastStartPosWHeight = _feetPos + _maxheight * Vector3.up;
+        var _playerRaycastStartPosWHeight = _feetPos + _maxheight * Vector3.up + Vector3.down * 0.02f;
         var _maxLengthFromPlayerToObstacleWOffset = _maxLengthFromPlayerToObstacle + .1f;
         bool _fronthitted = Physics.Raycast(_playerRaycastStartPosWHeight, _direction, out RaycastHit _frontHit, _maxLengthFromPlayerToObstacleWOffset, _layerMask);
         if (!_fronthitted)
@@ -33,8 +33,7 @@ public class Universal_RaycastAssistance
             if (_downHitted)
             {
                 Physics.Raycast(_feetPos + new Vector3(0f, _playerHeight, 0f), Vector3.down, out RaycastHit _feetHit, Mathf.Infinity, _layerMask);
-                //Debug.Log($"Height hit checker {_downHit.point.y - _feetPos.y} is heigher then 0.1f");
-                if (/*_downHit.point.y - _feetHit.point.y > 0.1f &&*/ _downHit.point.y < _feetHit.point.y + _maxheight)
+                if (_downHit.point.y < _feetHit.point.y + _maxheight && Vector2.Dot(Vector2.up, _downHit.normal) > _dotMaxAngle)
                 {
                     HeightHit = _downHit;
                     return true;
@@ -47,7 +46,7 @@ public class Universal_RaycastAssistance
     {
 
         var _raycastPosWHeight = RaycastPos + new Vector3(0f, _playerHeight, 0f);
-        var _playerRaycastStartPosWHeight = _feetPos + _maxheight * Vector3.up;
+        var _playerRaycastStartPosWHeight = _feetPos + _maxheight * Vector3.up + Vector3.down * 0.02f;
         var _maxLengthFromPlayerToObstacleWOffset = _maxLengthFromPlayerToObstacle + .1f;
         bool _fronthitted = Physics.Raycast(_playerRaycastStartPosWHeight, _direction, out RaycastHit _frontHit, _maxLengthFromPlayerToObstacleWOffset, _layerMask);
         Gizmos.color = (!_fronthitted) ? Color.white : Color.red;
@@ -76,7 +75,7 @@ public class Universal_RaycastAssistance
     /// 
     /// </summary>
     /// <param name="DotmaxAngle">closer to 1 means closer to flat gorund, closer to 0 means closer to something heigh</param>
-    public bool RaycastHitFromToY(Vector3 _startPosition, Vector3 _RaycastsDirection, float _distance, float _from, float _to, int _amount, LayerMask _layerMask,out RaycastHit _lowestHit, out RaycastHit _heighestHit, float DotmaxAngle = 0f)
+    public bool RaycastHitFromToY(Vector3 _startPosition, Vector3 _RaycastsDirection, float _distance, float _from, float _to, int _amount, LayerMask _layerMask,out RaycastHit _lowestHit, out RaycastHit _heighestHit)
     {
         float _lastLowestYHitPos = float.MaxValue;
         RaycastHit _LastlowestYhit = new RaycastHit();
@@ -102,9 +101,6 @@ public class Universal_RaycastAssistance
         _heighestHit = new RaycastHit();
         var _hittedHeighestHitGround = Physics.Raycast(_LastHeighestYHit.point + new Vector3(0f, 0.05f, 0f), Vector3.down, out RaycastHit _heighestHitGround, Mathf.Infinity, _layerMask);
         if (!_hittedHeighestHitGround) return false;
-
-        Debug.Log(Vector2.Dot(Vector2.up, _heighestHitGround.normal));
-        if (Vector2.Dot(Vector2.up, _heighestHitGround.normal) < DotmaxAngle) return false;
         _lowestHit = _LastlowestYhit;
         _heighestHit = _LastHeighestYHit;
         return true;
@@ -121,7 +117,7 @@ public class Universal_RaycastAssistance
     /// 
     /// </summary>
     /// <param name="DotmaxAngle">closer to 1 means closer to flat gorund, closer to 0 means closer to something heigh</param>
-    public bool RaycastHitFromToYGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, float _distance, float _from, float _to, int _amount, LayerMask _layerMask,Color _HitColor,Color _HeighestHitColor,Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit, float DotmaxAngle = 0f)
+    public bool RaycastHitFromToYGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, float _distance, float _from, float _to, int _amount, LayerMask _layerMask,Color _HitColor,Color _HeighestHitColor,Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit)
     {
         List<Vector3> _HitPositions = new List<Vector3>();
         List<Vector3> _NoneHitPositions = new List<Vector3>();
@@ -163,8 +159,8 @@ public class Universal_RaycastAssistance
         var _hittedHeighestHitGround = Physics.Raycast(_heighestHit.point + new Vector3(0f,0.05f,0f), Vector3.down, out RaycastHit _heighestHitGround, Mathf.Infinity, _layerMask);
         if (!_hittedHeighestHitGround) return false;
 
-        Debug.Log(Vector2.Dot(Vector2.up, _heighestHitGround.normal));
-        if (Vector2.Dot(Vector2.up, _heighestHitGround.normal) < DotmaxAngle) return false;
+       //Debug.Log(Vector2.Dot(Vector2.up, _heighestHitGround.normal));
+        //if (Vector2.Dot(Vector2.up, _heighestHitGround.normal) < DotmaxAngle) return false;
         foreach (var pos in _HitPositions)
         {
             Gizmos.color = _HitColor;

@@ -66,10 +66,10 @@ public class testint : MonoBehaviour
 
                 Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, transform.position, -transform.up, offset, moveDirection, DistanceZ, destinationZ, amountZ, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit);
                 Universal_RaycastAssistance.instance.IsItProperHeightGizmos(rb.position, _heighestHit.point, moveDirection, maxHeight, distanceForwardFromPlayer, 1 << 8, 0f);
-                if (Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _heighestHit.point, moveDirection, maxHeight, distanceForwardFromPlayer, 1 << 8, out RaycastHit HeightHit, 0f))
+                if (Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _heighestHit.point, moveDirection, maxHeight, distanceForwardFromPlayer, 1 << 8, DotMaxSlope, out RaycastHit HeightHit, 0f))
                 {
                     Gizmos.color = Color.white;
-                    var yHit = Universal_RaycastAssistance.instance.RaycastHitFromToYGizmos(rb.position, moveDirection, Distance, rb.position.y, rb.position.y + destinationY, amount, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, DotMaxSlope);
+                    var yHit = Universal_RaycastAssistance.instance.RaycastHitFromToYGizmos(rb.position, moveDirection, Distance, rb.position.y, rb.position.y + destinationY, amount, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit);
                     if (yHit)
                     {
                         if (DebugFromFirstHitYPos)
