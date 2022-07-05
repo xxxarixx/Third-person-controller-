@@ -46,7 +46,7 @@ public class testint : MonoBehaviour
         switch (debugs)
         {
             case Debugs.Height:
-                Universal_RaycastAssistance.instance.IsItProperHeightGizmos(rb.position, rb.position, moveDirection, maxHeight, 1 << 8, distanceForwardFromPlayer);
+                Universal_RaycastAssistance.instance.IsItProperHeightGizmos(rb.position, rb.position, moveDirection, maxHeight, distanceForwardFromPlayer, 1 << 8, 0f);
                 break;
             case Debugs.ForwardHits:
                 Gizmos.color = Color.white;
@@ -64,9 +64,9 @@ public class testint : MonoBehaviour
                 break;
             case Debugs.both:
 
-                Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, -transform.up, offset, moveDirection, DistanceZ, destinationZ, amountZ, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit);
-                Universal_RaycastAssistance.instance.IsItProperHeightGizmos(rb.position, _heighestHit.point, moveDirection, maxHeight, 1 << 8, distanceForwardFromPlayer);
-                if (Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _heighestHit.point, moveDirection, maxHeight, 1 << 8, out RaycastHit HeightHit, distanceForwardFromPlayer))
+                Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, transform.position, -transform.up, offset, moveDirection, DistanceZ, destinationZ, amountZ, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit);
+                Universal_RaycastAssistance.instance.IsItProperHeightGizmos(rb.position, _heighestHit.point, moveDirection, maxHeight, distanceForwardFromPlayer, 1 << 8, 0f);
+                if (Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _heighestHit.point, moveDirection, maxHeight, distanceForwardFromPlayer, 1 << 8, out RaycastHit HeightHit, 0f))
                 {
                     Gizmos.color = Color.white;
                     var yHit = Universal_RaycastAssistance.instance.RaycastHitFromToYGizmos(rb.position, moveDirection, Distance, rb.position.y, rb.position.y + destinationY, amount, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, DotMaxSlope);
@@ -86,7 +86,7 @@ public class testint : MonoBehaviour
                 }
                 break;
             case Debugs.ForwardHitsZ:
-                Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, -transform.up, offset, moveDirection, DistanceZ, destinationZ, amountZ, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit);
+                Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(rb.position, transform.position, -transform.up, offset, moveDirection, DistanceZ, destinationZ, amountZ, 1 << 8, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit);
                 break;
             default:
                 break;

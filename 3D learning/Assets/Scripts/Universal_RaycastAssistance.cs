@@ -20,13 +20,16 @@ public class Universal_RaycastAssistance
         }
         return finalList.ToArray();
     }
-    public bool IsItProperHeight(Vector3 _feetPos, Vector3 RaycastPos, Vector3 _direction, float _maxheight, LayerMask _layerMask, out RaycastHit HeightHit, float _distanceFromDirection = .35f, float _playerHeight = 2f)
+    public bool IsItProperHeight(Vector3 _feetPos, Vector3 RaycastPos, Vector3 _direction, float _maxheight, float _maxLengthFromPlayerToObstacle, LayerMask _layerMask, out RaycastHit HeightHit, float _distanceFromDirection = .35f, float _playerHeight = 2f)
     {
         HeightHit = new RaycastHit();
-        bool _fronthitted = Physics.Raycast(RaycastPos + new Vector3(0f, _maxheight, 0f), _direction, out RaycastHit _frontHit, _distanceFromDirection, _layerMask);
+        var _raycastPosWHeight = RaycastPos + new Vector3(0f, _playerHeight, 0f);
+        var _playerRaycastStartPosWHeight = _feetPos + _maxheight * Vector3.up;
+        var _maxLengthFromPlayerToObstacleWOffset = _maxLengthFromPlayerToObstacle + .02f;
+        bool _fronthitted = Physics.Raycast(_playerRaycastStartPosWHeight, _direction, out RaycastHit _frontHit, _maxLengthFromPlayerToObstacleWOffset, _layerMask);
         if (!_fronthitted)
         {
-            var _downHitted = Physics.Raycast(RaycastPos + new Vector3(0f, _playerHeight, 0f) + _direction.normalized * _distanceFromDirection, Vector3.down, out RaycastHit _downHit, Mathf.Infinity, _layerMask);
+            var _downHitted = Physics.Raycast(_raycastPosWHeight + _direction.normalized * _distanceFromDirection, Vector3.down, out RaycastHit _downHit, Mathf.Infinity, _layerMask);
             if (_downHitted)
             {
                 Physics.Raycast(_feetPos + new Vector3(0f, _playerHeight, 0f), Vector3.down, out RaycastHit _feetHit, Mathf.Infinity, _layerMask);
@@ -40,22 +43,29 @@ public class Universal_RaycastAssistance
         }
         return false;
     }
-    public void IsItProperHeightGizmos(Vector3 _feetPos, Vector3 RaycastPos, Vector3 _direction, float _maxheight, LayerMask _layerMask, float _distanceFromDirection = .35f, float _playerHeight = 2f)
+    public void IsItProperHeightGizmos(Vector3 _feetPos, Vector3 RaycastPos, Vector3 _direction, float _maxheight, float _maxLengthFromPlayerToObstacle, LayerMask _layerMask, float _distanceFromDirection = .35f, float _playerHeight = 2f)
     {
-        bool _fronthitted = Physics.Raycast(RaycastPos + new Vector3(0f, _maxheight, 0f), _direction, out RaycastHit _frontHit, _distanceFromDirection, _layerMask);
+
+        var _raycastPosWHeight = RaycastPos + new Vector3(0f, _playerHeight, 0f);
+        var _playerRaycastStartPosWHeight = _feetPos + _maxheight * Vector3.up;
+        var _maxLengthFromPlayerToObstacleWOffset = _maxLengthFromPlayerToObstacle + .02f;
+        bool _fronthitted = Physics.Raycast(_playerRaycastStartPosWHeight, _direction, out RaycastHit _frontHit, _maxLengthFromPlayerToObstacleWOffset, _layerMask);
+        Gizmos.color = (!_fronthitted) ? Color.white : Color.red;
+        Gizmos.DrawCube(_playerRaycastStartPosWHeight + _direction * _maxLengthFromPlayerToObstacleWOffset, new Vector3(.05f,.05f,.05f));
+        DrawRaycastGizmo(_playerRaycastStartPosWHeight, _direction, _maxLengthFromPlayerToObstacleWOffset);
         Gizmos.color = Color.white;
-        DrawRaycastGizmo(RaycastPos + new Vector3(0f, _maxheight, 0f),_direction,_distanceFromDirection);
         if (!_fronthitted)
+            if (!_fronthitted)
         {
-            var _downHitted = Physics.Raycast(RaycastPos + new Vector3(0f, _playerHeight, 0f) + _direction.normalized * _distanceFromDirection, Vector3.down, out RaycastHit _downHit, Mathf.Infinity, _layerMask);
-            DrawRaycastGizmo(RaycastPos + new Vector3(0f, _playerHeight, 0f) + _direction.normalized * _distanceFromDirection, Vector3.down, 50f);
+            var _downHitted = Physics.Raycast(_raycastPosWHeight + _direction.normalized * _distanceFromDirection, Vector3.down, out RaycastHit _downHit, Mathf.Infinity, _layerMask);
+            DrawRaycastGizmo(_raycastPosWHeight + _direction.normalized * _distanceFromDirection, Vector3.down, 50f);
             if (_downHitted)
             {
                 Physics.Raycast(_feetPos + new Vector3(0f, _playerHeight, 0f), Vector3.down, out RaycastHit _feetHit, Mathf.Infinity, _layerMask);
                 if (/*_downHit.point.y - _feetHit.point.y > 0.1f &&*/ _downHit.point.y < _feetHit.point.y + _maxheight)
                 {
                     Gizmos.color = Color.green;
-                    Gizmos.DrawSphere(_downHit.point, .1f);
+                    Gizmos.DrawSphere(_downHit.point, .05f);
                     //return true;
                 }
             }
@@ -172,7 +182,7 @@ public class Universal_RaycastAssistance
         return true;
     }
 
-    public void RaycastHitFromToZGizmos(Vector3 _startPosition, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask, Color _HitColor, Color _HeighestHitColor, Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit)
+    public void RaycastHitFromToZGizmos(Vector3 _startPosition, Vector3 _feetPos, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask, Color _HitColor, Color _HeighestHitColor, Color _LowestHitColor, out RaycastHit _lowestHit, out RaycastHit _heighestHit)
     {
         List<Vector3> _HitPositions = new List<Vector3>();
         List<Vector3> _NoneHitPositions = new List<Vector3>();
@@ -185,7 +195,7 @@ public class Universal_RaycastAssistance
         foreach (var _zValue in GetBetweenValues(0, _to, _amount))
         {
            // Debug.Log(_zValue);
-            Vector3 origin = facingDirection * _zValue + new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) + offset;
+            Vector3 origin = facingDirection * _zValue + new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) + offset - new Vector3(0f, _startPosition.y - _feetPos.y, 0f);
             bool hitted = Physics.Raycast(origin, _RaycastsDirection, out RaycastHit hit, _distance, _layerMask);
             if (hitted && hit.point.y - _startPosition.y > 0.01f)
             {
@@ -236,7 +246,7 @@ public class Universal_RaycastAssistance
         Gizmos.color = _HeighestHitColor;
         DrawRaycastGizmo(_heighestHitOrigin, _RaycastsDirection, _distance);
     }
-    public bool RaycastHitFromToZ(Vector3 _startPosition, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask,out RaycastHit _lowestHit, out RaycastHit _heighestHit)
+    public bool RaycastHitFromToZ(Vector3 _startPosition, Vector3 _feetPos, Vector3 _RaycastsDirection, Vector3 offset, Vector3 facingDirection, float _distance, float _to, int _amount, LayerMask _layerMask,out RaycastHit _lowestHit, out RaycastHit _heighestHit)
     {
         float _lastLowestZHitPos = float.MaxValue;
         RaycastHit _LastlowestZhit = new RaycastHit();
@@ -246,7 +256,7 @@ public class Universal_RaycastAssistance
         foreach (var _zValue in GetBetweenValues(0, _to, _amount))
         {
             //Debug.Log(_zValue);
-            Vector3 origin = facingDirection * _zValue + new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) + offset;
+            Vector3 origin = facingDirection * _zValue + new Vector3(_startPosition.x, _startPosition.y, _startPosition.z) + offset - new Vector3(0f, _startPosition.y - _feetPos.y, 0f);
             bool hitted = Physics.Raycast(origin, _RaycastsDirection, out RaycastHit hit, _distance, _layerMask);
             if (!hitted) continue;
             startHitted = true;

@@ -40,7 +40,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
     [Header("Slopes/Stairs")]
     [SerializeField] private float slopeCheckerSize = 1f;
     [Range(.1f,1f), SerializeField] private float slopeMaxSize = .6f;
-    [SerializeField] private float obstacleMaxSize = .5f;
+    [SerializeField] private float obstacleMaxHeight = .35f;
+    [SerializeField] private float maxLengthFromPlayerToObstacle = .4f;
     [SerializeField] private int frontAmount = 10;
     [SerializeField] private int topAmount = 15;
     [SerializeField] private bool debug_ProperFrontWorking = false;
@@ -169,7 +170,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
                 AnyMovementApplied = false;
                 if (!_isJumping && _FrontheighestHit.point.y - rb.position.y < 0.01f && _isGrounded)
                 {
-                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, 1f, groundMask, out RaycastHit _heightHit2, 0f);
+                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, 1f,maxLengthFromPlayerToObstacle, groundMask, out RaycastHit _heightHit2, 0f);
                     if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) > -0.6f)
                     {
                         Move(((_heightHit2.point + moveDirection * 0.1f /*+ Vector3.down * .05f*/) - transform.position).normalized, speed_Current, true);
@@ -178,7 +179,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
                 }
                 else
                 {
-                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, 1f, groundMask, out RaycastHit _heightHit2, 0f);
+                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, 1f,maxLengthFromPlayerToObstacle, groundMask, out RaycastHit _heightHit2, 0f);
                     if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) <= -0.6f)
                     {
                         rb.AddForce(GetMoveDirection(false) * 1000f * Time.fixedDeltaTime, ForceMode.Impulse);
@@ -191,13 +192,13 @@ public class RigidbodyBasedMovement : MonoBehaviour
             void _WholeObstacleChecker(float offsetMoveYAngle)
             {
                 var moveDirection = Quaternion.Euler(0f, offsetMoveYAngle, 0f) * GetMoveDirection();
-                debug_ProperFrontWorking = Universal_RaycastAssistance.instance.RaycastHitFromToZ(_GetRaycastCollisonStartPos(), -transform.up, Vector3.up * obstacleMaxSize, moveDirection, obstacleMaxSize, .75f, frontAmount, groundMask, out RaycastHit _FrontlowestHit, out RaycastHit _FrontheighestHit);
+                debug_ProperFrontWorking = Universal_RaycastAssistance.instance.RaycastHitFromToZ(_GetRaycastCollisonStartPos(),_GetFeetPos(), -transform.up, Vector3.up * obstacleMaxHeight, moveDirection, obstacleMaxHeight, .75f, frontAmount, groundMask, out RaycastHit _FrontlowestHit, out RaycastHit _FrontheighestHit);
                 if (debug_ProperFrontWorking)
                 {
-                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _FrontheighestHit.point, moveDirection, 1f, groundMask, out RaycastHit _heightHit, 0f);
+                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _FrontheighestHit.point, moveDirection, 1f,maxLengthFromPlayerToObstacle, groundMask, out RaycastHit _heightHit, 0f);
                     if (debug_ProperHeightWorking)
                     {
-                        debug_RaycastHitFromToYWorking = Universal_RaycastAssistance.instance.RaycastHitFromToY(rb.position, moveDirection, 1f, rb.position.y, rb.position.y + obstacleMaxSize, topAmount, groundMask, out RaycastHit _lowestHit, out RaycastHit _heighestHit, slopeMaxSize);
+                        debug_RaycastHitFromToYWorking = Universal_RaycastAssistance.instance.RaycastHitFromToY(rb.position, moveDirection, 1f, rb.position.y, rb.position.y + obstacleMaxHeight, topAmount, groundMask, out RaycastHit _lowestHit, out RaycastHit _heighestHit, slopeMaxSize);
                         if (debug_RaycastHitFromToYWorking)
                         {
                             groundCollision.enabled = false;
@@ -279,7 +280,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
     private Vector3 _GetFeetPos(float offsetX = 0f,float offsetY = 0f,float offsetZ = 0f)
     {
-        return transform.position /*PlayerCollision.bounds.center - new Vector3(0f, PlayerCollision.bounds.size.y / 2, 0f)*/ + new Vector3(offsetX,offsetY,offsetZ);
+        return rb.position /*PlayerCollision.bounds.center - new Vector3(0f, PlayerCollision.bounds.size.y / 2, 0f)*/ + new Vector3(offsetX,offsetY,offsetZ);
     }
     private Vector3 _GetColliderPos(float offsetX = 0f, float offsetY = 0f, float offsetZ = 0f)
     {
@@ -315,23 +316,25 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
     private void _Movement_Debug(float offsetAngleY)
     {
+        Gizmos.color = Color.magenta;
+        Gizmos.DrawSphere(rb.position, .05f);
         if (debug_DrawGroundedSize)
         {
             Gizmos.color = Color.green;
             Gizmos.DrawWireSphere(_GetFeetPos(), groundDistance);
         }
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(_GetRaycastCollisonStartPos(), .05f);
+        Gizmos.DrawWireSphere(_GetRaycastCollisonStartPos(), (.3f * groundCollision_radius));
 
         var moveDirection = Quaternion.Euler(0f, offsetAngleY, 0f) * GetMoveDirection(false);
         if (!Application.isPlaying) moveDirection = Quaternion.Euler(0f, offsetAngleY, 0f) * transform.forward;
 
-        Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(_GetRaycastCollisonStartPos(), -transform.up, Vector3.up * obstacleMaxSize, moveDirection, obstacleMaxSize, .75f, frontAmount, groundMask, Color.red, Color.blue, Color.yellow, out RaycastHit _lowestHit, out RaycastHit _heighestHit);
-        Universal_RaycastAssistance.instance.IsItProperHeightGizmos(rb.position, _heighestHit.point, moveDirection, 1f, groundMask, 0f);
-        if (Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _heighestHit.point, moveDirection, 1f, groundMask, out RaycastHit HeightHit, 0f))
+        Universal_RaycastAssistance.instance.RaycastHitFromToZGizmos(_GetRaycastCollisonStartPos(), _GetFeetPos(), -transform.up, Vector3.up * obstacleMaxHeight, moveDirection, obstacleMaxHeight, maxLengthFromPlayerToObstacle, frontAmount, groundMask, Color.red, Color.blue, Color.yellow, out RaycastHit _lowestHit, out RaycastHit _heighestHit);
+        Universal_RaycastAssistance.instance.IsItProperHeightGizmos(rb.position, _heighestHit.point, moveDirection, obstacleMaxHeight,maxLengthFromPlayerToObstacle, groundMask, 0f);
+        if (Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _heighestHit.point, moveDirection, obstacleMaxHeight, maxLengthFromPlayerToObstacle, groundMask, out RaycastHit HeightHit, 0f))
         {
             Gizmos.color = Color.white;
-            var yHit = Universal_RaycastAssistance.instance.RaycastHitFromToYGizmos(rb.position, moveDirection, 1f, rb.position.y, rb.position.y + obstacleMaxSize, topAmount, groundMask, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, slopeMaxSize);
+            var yHit = Universal_RaycastAssistance.instance.RaycastHitFromToYGizmos(rb.position, moveDirection, maxLengthFromPlayerToObstacle, rb.position.y, rb.position.y + obstacleMaxHeight, topAmount, groundMask, Color.red, Color.blue, Color.yellow, out _lowestHit, out _heighestHit, slopeMaxSize);
             if (yHit)
             {
                 Gizmos.color = Color.magenta;
