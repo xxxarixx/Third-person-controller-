@@ -25,7 +25,7 @@ public class Universal_RaycastAssistance
         HeightHit = new RaycastHit();
         var _raycastPosWHeight = RaycastPos + new Vector3(0f, _playerHeight, 0f);
         var _playerRaycastStartPosWHeight = _feetPos + _maxheight * Vector3.up;
-        var _maxLengthFromPlayerToObstacleWOffset = _maxLengthFromPlayerToObstacle + .02f;
+        var _maxLengthFromPlayerToObstacleWOffset = _maxLengthFromPlayerToObstacle + .1f;
         bool _fronthitted = Physics.Raycast(_playerRaycastStartPosWHeight, _direction, out RaycastHit _frontHit, _maxLengthFromPlayerToObstacleWOffset, _layerMask);
         if (!_fronthitted)
         {
@@ -48,7 +48,7 @@ public class Universal_RaycastAssistance
 
         var _raycastPosWHeight = RaycastPos + new Vector3(0f, _playerHeight, 0f);
         var _playerRaycastStartPosWHeight = _feetPos + _maxheight * Vector3.up;
-        var _maxLengthFromPlayerToObstacleWOffset = _maxLengthFromPlayerToObstacle + .02f;
+        var _maxLengthFromPlayerToObstacleWOffset = _maxLengthFromPlayerToObstacle + .1f;
         bool _fronthitted = Physics.Raycast(_playerRaycastStartPosWHeight, _direction, out RaycastHit _frontHit, _maxLengthFromPlayerToObstacleWOffset, _layerMask);
         Gizmos.color = (!_fronthitted) ? Color.white : Color.red;
         Gizmos.DrawCube(_playerRaycastStartPosWHeight + _direction * _maxLengthFromPlayerToObstacleWOffset, new Vector3(.05f,.05f,.05f));

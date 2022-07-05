@@ -19,8 +19,9 @@ public class RigidbodyBasedMovement : MonoBehaviour
     [SerializeField] private Vector3 playerCollision_offset = Vector3.zero;
     [SerializeField] private float playerCollision_radius = .3f;
     [SerializeField] private float playerCollision_height = 1.25f;
-    [SerializeField] private SphereCollider groundCollision;
+    [SerializeField] private CapsuleCollider groundCollision;
     [SerializeField] private Vector3 groundCollision_offset = Vector3.zero;
+    [SerializeField] private float groundCollision_height_Offset = .5f;
     [SerializeField] private float groundCollision_radius = .5f;
 
     [Header("Casual movement")]
@@ -66,8 +67,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
     }
     private void Start()
     {
-        _GroundCollision_Customize(groundCollision_offset, groundCollision_radius);
         _PlayerCollision_Customize(playerCollision_offset, playerCollision_radius, playerCollision_height);
+        _GroundCollision_Customize(groundCollision_offset, groundCollision_radius, obstacleMaxHeight);
         _SetupCursor();
         _startingPosition = transform.position;
         speed_Current = speed;
@@ -103,7 +104,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         Gizmos.color = Color.gray;
         Gizmos.DrawWireCube(_GetHeadPlayerCollisionPosition(), Vector3.one * .1f);
         _PlayerCollision_Customize(playerCollision_offset, playerCollision_radius, playerCollision_height);
-        _GroundCollision_Customize(groundCollision_offset, groundCollision_radius);
+        _GroundCollision_Customize(groundCollision_offset, groundCollision_radius, obstacleMaxHeight);
         _Movement_Debug(0f);
         //_Movement_Debug(30f);
         //_Movement_Debug(-30f);
@@ -170,7 +171,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
                 AnyMovementApplied = false;
                 if (!_isJumping && _FrontheighestHit.point.y - rb.position.y < 0.01f && _isGrounded)
                 {
-                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, 1f,maxLengthFromPlayerToObstacle, groundMask, out RaycastHit _heightHit2, 0f);
+                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, obstacleMaxHeight, maxLengthFromPlayerToObstacle, groundMask, out RaycastHit _heightHit2, 0f);
                     if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) > -0.6f)
                     {
                         Move(((_heightHit2.point + moveDirection * 0.1f /*+ Vector3.down * .05f*/) - transform.position).normalized, speed_Current, true);
@@ -179,7 +180,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
                 }
                 else
                 {
-                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, 1f,maxLengthFromPlayerToObstacle, groundMask, out RaycastHit _heightHit2, 0f);
+                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, obstacleMaxHeight, maxLengthFromPlayerToObstacle, groundMask, out RaycastHit _heightHit2, 0f);
                     if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) <= -0.6f)
                     {
                         rb.AddForce(GetMoveDirection(false) * 1000f * Time.fixedDeltaTime, ForceMode.Impulse);
@@ -192,13 +193,13 @@ public class RigidbodyBasedMovement : MonoBehaviour
             void _WholeObstacleChecker(float offsetMoveYAngle)
             {
                 var moveDirection = Quaternion.Euler(0f, offsetMoveYAngle, 0f) * GetMoveDirection();
-                debug_ProperFrontWorking = Universal_RaycastAssistance.instance.RaycastHitFromToZ(_GetRaycastCollisonStartPos(),_GetFeetPos(), -transform.up, Vector3.up * obstacleMaxHeight, moveDirection, obstacleMaxHeight, .75f, frontAmount, groundMask, out RaycastHit _FrontlowestHit, out RaycastHit _FrontheighestHit);
+                debug_ProperFrontWorking = Universal_RaycastAssistance.instance.RaycastHitFromToZ(_GetRaycastCollisonStartPos(),_GetFeetPos(), -transform.up, Vector3.up * obstacleMaxHeight, moveDirection, obstacleMaxHeight, maxLengthFromPlayerToObstacle, frontAmount, groundMask, out RaycastHit _FrontlowestHit, out RaycastHit _FrontheighestHit);
                 if (debug_ProperFrontWorking)
                 {
-                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _FrontheighestHit.point, moveDirection, 1f,maxLengthFromPlayerToObstacle, groundMask, out RaycastHit _heightHit, 0f);
+                    debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, _FrontheighestHit.point, moveDirection, obstacleMaxHeight,maxLengthFromPlayerToObstacle, groundMask, out RaycastHit _heightHit, 0f);
                     if (debug_ProperHeightWorking)
                     {
-                        debug_RaycastHitFromToYWorking = Universal_RaycastAssistance.instance.RaycastHitFromToY(rb.position, moveDirection, 1f, rb.position.y, rb.position.y + obstacleMaxHeight, topAmount, groundMask, out RaycastHit _lowestHit, out RaycastHit _heighestHit, slopeMaxSize);
+                        debug_RaycastHitFromToYWorking = Universal_RaycastAssistance.instance.RaycastHitFromToY(rb.position, moveDirection, obstacleMaxHeight, rb.position.y, rb.position.y + obstacleMaxHeight, topAmount, groundMask, out RaycastHit _lowestHit, out RaycastHit _heighestHit, slopeMaxSize);
                         if (debug_RaycastHitFromToYWorking)
                         {
                             groundCollision.enabled = false;
@@ -286,24 +287,25 @@ public class RigidbodyBasedMovement : MonoBehaviour
     {
         return playerCollision.bounds.center - new Vector3(0f, playerCollision.bounds.size.y / 2, 0f) + new Vector3(offsetX, offsetY, offsetZ);
     }
-    private void _GroundCollision_Customize(Vector3 _centerOffset, float _radius)
+    private void _GroundCollision_Customize(Vector3 _centerOffset, float _radius,float _height)
     {
         if (groundCollision == null) { Debug.LogError("groundCollision NULL");  return; }
-
-        groundCollision.center = _centerOffset;
+        Vector3 snapToPivolt = _centerOffset + Vector3.up * (_height / 2 + groundCollision_height_Offset / 2);
+        groundCollision.center = snapToPivolt;
+        groundCollision.height = _height + groundCollision_height_Offset;
         groundCollision.radius = _radius;
     }
     private void _PlayerCollision_Customize(Vector3 _centerOffset, float _radius, float _height)
     {
         if (groundCollision == null) { Debug.LogError("groundCollision NULL"); return; }
-        Vector3 a = _centerOffset + Vector3.up * _height / 2 + Vector3.up * groundCollision_radius/*+ Vector3.up * obstacleMaxSize + Vector3.up * 0.025f*/;
-        playerCollision.center = a;
+        Vector3 snapToPivolt = _centerOffset + Vector3.up * _height / 2 + Vector3.up * (obstacleMaxHeight + .1f);
+        playerCollision.center = snapToPivolt;
         playerCollision.radius = _radius;
         playerCollision.height = _height;
     }
     private Vector3 _GetHeadPlayerCollisionPosition(float xOffset = 0f, float yOffset = 0f, float zOffset = 0f)
     {
-        return rb.position + Vector3.up * (2 * groundCollision_radius) + playerCollision_offset + Vector3.up * playerCollision_height + new Vector3(xOffset,yOffset,zOffset);
+        return rb.position + Vector3.up * (obstacleMaxHeight + .1f) + Vector3.up * playerCollision_height + new Vector3(xOffset,yOffset,zOffset);
     }
     private Vector3 _GetRaycastCollisonStartPos() 
     {
