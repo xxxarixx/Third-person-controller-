@@ -6,9 +6,9 @@ public class Universal_RaycastAssistance
 {
     private static Universal_RaycastAssistance savedInstance;
     public static Universal_RaycastAssistance instance { get { return savedInstance == null? savedInstance = new Universal_RaycastAssistance(): savedInstance; } private set { } }
-    public float[] GetBetweenValues(float _from, float _to, int _amount)
+    public float[] GetBetweenValues(float _from, float _to, int _amount, float multiplayer = 1)
     {
-        Debug.Log("WORKIUNG");
+        //Debug.Log("WORKIUNG");
         List<float> finalList = new List<float>();
 
         var LineDistance = _to - _from;
@@ -16,7 +16,7 @@ public class Universal_RaycastAssistance
 
         for (float i = _from; i < _to; i += PointDistance)
         {
-            finalList.Add(i);
+            finalList.Add(i * multiplayer);
         }
         return finalList.ToArray();
     }
@@ -288,6 +288,40 @@ public class Universal_RaycastAssistance
     public void DrawRaycastGizmo(Vector3 origin, Vector3 direciton, float Distance)
     {
         Gizmos.DrawLine(origin, origin + direciton * Distance);
+    }
+    public Vector3[] GetDirectionsAroundDirectionInYAngle(Vector3 _direction,float _maxAngle, int _amount)
+    {
+        var _betweenValues = GetBetweenValues(0f, _maxAngle,_amount);
+        var _betweenValuesNegative = GetBetweenValues(0f, _maxAngle, _amount, -1f);
+        var _betweenValuesMixed = _MixLists(_betweenValues, _betweenValuesNegative);
+        Vector3[] vector3s = new Vector3[_betweenValuesMixed.Length];
+        for (int i = 0; i < _betweenValuesMixed.Length; i++)
+        {
+            var angle = _betweenValuesMixed[i];
+            vector3s[i] = Quaternion.Euler(0f, angle, 0f) * _direction;
+        }
+        return vector3s.ToArray();
+    }
+    private T[] _MixLists<T>(T[] _arrayA, T[] _arrayB)
+    {
+        T[] combinedArrayAB = new T[_arrayA.Length + _arrayB.Length];
+        for (int i = 0; i < combinedArrayAB.Length; i++)
+        {
+            combinedArrayAB[i] = (i % 2 == 0) ? _arrayA[Mathf.FloorToInt(i / 2)]: _arrayB[Mathf.FloorToInt(i / 2)];
+        }
+        return combinedArrayAB;
+    }
+    public Vector3[] UniformPointsOnYAxis(Vector3 _from, float _to, int _amount, int _ignoreFromStartIndexes = 0)
+    {
+        var _betweenValues = GetBetweenValues(0, _to, _amount);
+        Vector3[] _points = new Vector3[_betweenValues.Length - _ignoreFromStartIndexes];
+        for (int i = 0; i < _betweenValues.Length; i++)
+        {
+            if (i < _ignoreFromStartIndexes) continue;
+            var _betweenValue = _betweenValues[i];
+            _points[i - _ignoreFromStartIndexes] = _from + Vector3.up * _betweenValue;
+        }
+        return _points;
     }
     public Vector3[] UniformPointsOnSphere(float numberOfPoints)
     {
