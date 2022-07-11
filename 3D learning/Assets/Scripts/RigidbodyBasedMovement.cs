@@ -5,7 +5,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
 {
     [Header("Scripts assigment")]
     [Header("IMPORTANT: Object holding this script pivolt must be just around down end of ground collision")]
-    [SerializeField]private Animator anim;
+    [SerializeField] private Animator anim;
     public static RigidbodyBasedMovement instance;
     public PlayerInput input;
     [SerializeField] private Rigidbody rb;
@@ -29,21 +29,21 @@ public class RigidbodyBasedMovement : MonoBehaviour
     [SerializeField] private float speed = 100f;
     [SerializeField] private float sprintSpeed = 275f;
     [SerializeField] private float turnSmoothTime = 0.1f;
-    public float speed_Current { get;private set; }
+    public float speed_Current { get; private set; }
     private float _turnSmoothVelocity;
     private bool _isSprinting;
 
     [Header("Jump")]
-    [SerializeField] private LayerMask groundMask;
     [SerializeField] private float groundDistance = 0.4f;
+    public LayerMask groundMask;
     private bool _isGrounded;
     private bool _isJumping = false;
 
     [Header("Slopes/Stairs")]
     [SerializeField] private float slopeCheckerSize = 1f;
-    [Range(.1f,1f), SerializeField] private float slopeMaxSize = .6f;
-    [SerializeField] private float obstacleMaxHeight = .35f;
-    [SerializeField] private float maxLengthFromPlayerToObstacle = .4f;
+    [Range(.1f, 1f)] public float slopeMaxSize= .6f;
+    public float obstacleMaxHeight  = .35f;
+    public float maxLengthFromPlayerToObstacle  = .4f;
     [SerializeField] private int frontAmount = 10;
     [SerializeField] private int topAmount = 15;
     [SerializeField] private bool debug_ProperFrontWorking = false;
@@ -51,9 +51,14 @@ public class RigidbodyBasedMovement : MonoBehaviour
     [SerializeField] private bool debug_RaycastHitFromToYWorking = false;
 
     [Header("Animations")]
-    [SerializeField] private string anim_idle;
-    [SerializeField] private string anim_walk;
-    [SerializeField] private string anim_run;
+    private float anim_xVelocity;
+    private float anim_zVelocity;
+    private float anim_lastUpdated_xVelocity;
+    private float anim_lastUpdated_zVelocity;
+    private float anim_progress;
+    //[SerializeField] private string anim_idle;
+    //[SerializeField] private string anim_walk;
+    //[SerializeField] private string anim_run;
 
     [Header("Teleport player from void")]
     [SerializeField] private float teleportWhenPlayerYEqual = -10f;
@@ -74,23 +79,27 @@ public class RigidbodyBasedMovement : MonoBehaviour
         _SetupCursor();
         _startingPosition = transform.position;
         speed_Current = speed;
-
     }
     private void Update()
     {
         Vector3 InputDirection = input.GetMoveDirectionInput();
-        if (Input.GetKeyDown(KeyCode.LeftShift))
+        anim_xVelocity = Mathf.Lerp(anim_xVelocity, input.Moveinput.x, Time.deltaTime * 7f);
+        anim_zVelocity = Mathf.Lerp(anim_zVelocity, input.Moveinput.y, Time.deltaTime * 7f);
+        anim.SetFloat("xVelocity", anim_xVelocity);
+        anim.SetFloat("zVelocity", anim_zVelocity);
+        anim.SetBool("Running", _isSprinting);
+        /*if (Input.GetKeyDown(KeyCode.LeftShift))
         {
             speed_Current = sprintSpeed;
-            anim.Play(anim_run);
+            //anim.Play(anim_run);
             _isSprinting = true;
         }
         if (Input.GetKeyUp(KeyCode.LeftShift) && _isSprinting)
         {
             speed_Current = speed;
-            anim.Play(anim_walk);
+            //anim.Play(anim_walk);
             _isSprinting = false;
-        }
+        }*/
         _isGrounded = Physics.CheckSphere(_GetFeetPos(), groundDistance, groundMask);
         if(transform.position.y < teleportWhenPlayerYEqual)
         {
@@ -109,6 +118,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
         _PlayerCollision_Customize(playerCollision_offset, playerCollision_radius, playerCollision_height);
         _GroundCollision_Customize(groundCollision_offset, groundCollision_radius, obstacleMaxHeight);
         _Movement_Debug(0f);
+        Gizmos.color = Color.yellow;
+        Universal_RaycastAssistance.instance.DrawRaycastGizmo(_GetFeetPos(0f, 0.06f), Vector3.down, 0.1f);
         //_Movement_Debug(30f);
         //_Movement_Debug(-30f);
     }
@@ -139,7 +150,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
         Vector3 InputDirection = input.GetMoveDirectionInput();
         float targetAngle = Mathf.Atan2(InputDirection.x, InputDirection.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
         float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, turnSmoothTime);
-        if(/*InputDirection.z >= 0 && */applyRotation && !_lockPlayerInput) transform.rotation = Quaternion.Euler(0f, angle, 0f);
+        if(applyRotation && !_lockPlayerInput) transform.rotation = Quaternion.Euler(0f, angle, 0f);
 
         return Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
     }
@@ -166,27 +177,35 @@ public class RigidbodyBasedMovement : MonoBehaviour
         Vector3 InputDirection = input.GetMoveDirectionInput();
         if (InputDirection.magnitude > 0.01f)
         {
-            
-
+            //RigidbodyFootInteraction.instance.SetMovementState(true);
             void _DownWardMovement(RaycastHit _FrontheighestHit,Vector3 moveDirection, out bool AnyMovementApplied)
             {
                 Debug.Log("Applied DownMovement");
                 AnyMovementApplied = false;
-                if (!_isJumping && _FrontheighestHit.point.y - rb.position.y < 0.01f && _isGrounded)
+                if (!_isJumping && _FrontheighestHit.point.y - rb.position.y < 0.01f /*&& _isGrounded*/)
                 {
                     debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, obstacleMaxHeight, maxLengthFromPlayerToObstacle, groundMask, slopeMaxSize, out RaycastHit _heightHit2, 0f);
-                    if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) > -0.6f)
+                    if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) > -obstacleMaxHeight)
                     {
                         Move(((_heightHit2.point + moveDirection * 0.1f /*+ Vector3.down * .05f*/) - transform.position).normalized, speed_Current, true);
+                        //RigidbodyFootInteraction.instance.setDestinationPos(_heightHit2.point + moveDirection * 0.1f);
                     }
+                    else
+                    {
+                        rb.AddForce(GetMoveDirection(false) * 1000f * Time.fixedDeltaTime, ForceMode.Impulse);
+                        groundCollision.enabled = true;
+                        gravity.ActiveGravity = true;
+                    }
+
                     AnyMovementApplied = true;
                 }
                 else
                 {
                     debug_ProperHeightWorking = Universal_RaycastAssistance.instance.IsItProperHeight(rb.position, rb.position + moveDirection * 0.2f, moveDirection, obstacleMaxHeight, maxLengthFromPlayerToObstacle, groundMask, slopeMaxSize, out RaycastHit _heightHit2, 0f);
-                    if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) <= -0.6f)
+                    if (Mathf.Abs(_heightHit2.point.y) - Mathf.Abs(rb.position.y) <= -obstacleMaxHeight)
                     {
                         rb.AddForce(GetMoveDirection(false) * 1000f * Time.fixedDeltaTime, ForceMode.Impulse);
+                        //RigidbodyFootInteraction.instance.setDestinationPos(_heightHit2.point + moveDirection * 0.1f);
                         AnyMovementApplied = true;
                     }
                     groundCollision.enabled = true;
@@ -208,12 +227,13 @@ public class RigidbodyBasedMovement : MonoBehaviour
                             groundCollision.enabled = false;
                             gravity.ActiveGravity = false;
                             Move(((_heighestHit.point + moveDirection * 0.1f) - rb.position).normalized, speed_Current, true);
-
+                            //RigidbodyFootInteraction.instance.setDestinationPos(_heighestHit.point + moveDirection * 0.1f);
                             if (Physics.Raycast(_GetHeadPlayerCollisionPosition(), Vector3.down, out RaycastHit _noneGroundColYCheck_hit, 2f, groundMask))
                             {
                                 if (rb.position.y < _noneGroundColYCheck_hit.point.y)
                                 {
                                     rb.position = new Vector3(rb.position.x, Mathf.Lerp(rb.position.y, _noneGroundColYCheck_hit.point.y, Time.deltaTime * 10f), rb.position.z);
+                                   // RigidbodyFootInteraction.instance.setDestinationPos(_noneGroundColYCheck_hit.point + moveDirection * 0.5f);
                                 }
                             }
                             Debug.Log("Applied 3check force");
@@ -223,6 +243,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
                     {
                         //too high slope
                         _DownWardMovement(_FrontheighestHit, moveDirection, out bool _anyMovementApplied);
+                        
                         if (!_anyMovementApplied && _isGrounded)
                         {
                             Debug.Log("Applied Force Down");
@@ -250,22 +271,29 @@ public class RigidbodyBasedMovement : MonoBehaviour
             {
                 Move(moveDir, speed_Current * 0.75f);
             }
-
-
-            if (!_isSprinting) anim.Play(anim_walk);
-            
-           
-
-           
-
+            anim_lastUpdated_xVelocity = anim_xVelocity;
+            anim_lastUpdated_zVelocity = anim_zVelocity;
+            anim_progress = 0f;
+            //if (!_isSprinting) anim.Play(anim_walk);
         }
         else
         {
-            anim.Play(anim_idle);
+            //anim.Play(anim_idle);
+            //RigidbodyFootInteraction.instance.SetMovementState(false);
+            anim_xVelocity = Mathf.Lerp(anim_lastUpdated_xVelocity, 0f, anim_progress);
+            anim_zVelocity = Mathf.Lerp(anim_lastUpdated_zVelocity, 0f, anim_progress);
+            anim_progress = Mathf.Clamp01(anim_progress + Time.deltaTime * 4f);
             #region stairReset
             groundCollision.enabled = true;
-            gravity.ActiveGravity = true;
             #endregion
+            if(!_isJumping && Physics.Raycast(_GetFeetPos(0f, 0.06f), Vector3.down, out RaycastHit slopeHit, 0.1f, groundMask) && Vector2.Dot(Vector2.up, slopeHit.normal) > slopeMaxSize)
+            {
+                gravity.ActiveGravity = false;
+            }
+            else
+            {
+                gravity.ActiveGravity = true;
+            }
             if (rb.velocity.y > 0 && !_isJumping)
             {
                 rb.velocity = Vector3.zero;
@@ -276,7 +304,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
             }
         }
     }
-    private Vector3 _GetFeetPos(float offsetX = 0f,float offsetY = 0f,float offsetZ = 0f)
+    public Vector3 _GetFeetPos(float offsetX = 0f,float offsetY = 0f,float offsetZ = 0f)
     {
         return rb.position /*PlayerCollision.bounds.center - new Vector3(0f, PlayerCollision.bounds.size.y / 2, 0f)*/ + new Vector3(offsetX,offsetY,offsetZ);
     }
@@ -304,7 +332,7 @@ public class RigidbodyBasedMovement : MonoBehaviour
     {
         return rb.position + Vector3.up * (obstacleMaxHeight + .1f) + Vector3.up * playerCollision_height + new Vector3(xOffset,yOffset,zOffset);
     }
-    private Vector3 _GetRaycastCollisonStartPos() 
+    public Vector3 _GetRaycastCollisonStartPos() 
     {
         return groundCollision.transform.position + groundCollision_offset - (groundCollision_radius) * Vector3.up + .075f * Vector3.up;
     }
@@ -325,6 +353,8 @@ public class RigidbodyBasedMovement : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(_GetRaycastCollisonStartPos(), (.3f * groundCollision_radius));
 
+        
+
         var moveDirection = Quaternion.Euler(0f, offsetAngleY, 0f) * GetMoveDirection(false);
         if (!Application.isPlaying) moveDirection = Quaternion.Euler(0f, offsetAngleY, 0f) * transform.forward;
 
@@ -339,6 +369,32 @@ public class RigidbodyBasedMovement : MonoBehaviour
                 Gizmos.color = Color.magenta;
                 Gizmos.DrawLine(new Vector3(rb.position.x, _lowestHit.point.y, rb.position.z), _heighestHit.point + moveDirection * 0.05f);
             }
+        }
+        else
+        {
+            /*Gizmos.color = Color.white;
+            var _headPos = _GetHeadPlayerCollisionPosition();
+            foreach (var _point in Universal_RaycastAssistance.instance.UniformPointsOnYAxis(_GetFeetPos(), (_headPos.y - _GetFeetPos().y) / 2, 7, 2))
+            {
+
+                //check if from this point is possible player to cross over the obstacle with small positive Y offset
+                var _feetpos = _GetFeetPos();
+                var _hitted = Physics.Raycast(_point, moveDirection, out RaycastHit hit, maxLengthFromPlayerToObstacle + .1f,groundMask);
+                var _hittedDown = Physics.Raycast(hit.point, Vector3.down, out RaycastHit hitDown, Mathf.Infinity, groundMask);
+                Gizmos.color = (_hitted && _hittedDown) ? Color.red : Color.white;
+                
+                Universal_RaycastAssistance.instance.DrawRaycastGizmo(_point, moveDirection, maxLengthFromPlayerToObstacle + .1f);
+                if(!_hitted && _hittedDown && Mathf.Abs(hitDown.point.y) - Mathf.Abs(_GetFeetPos().y) < 0f)
+                {
+                    foreach (var _direction in Universal_RaycastAssistance.instance.GetDirectionsAroundDirectionInYAngle(moveDirection, 90,6))
+                    {
+                        Gizmos.color = Color.magenta;
+                        Universal_RaycastAssistance.instance.DrawRaycastGizmo(_point, _direction, maxLengthFromPlayerToObstacle + .5f);
+                    }
+                }
+
+                Gizmos.DrawSphere(_point, .05f);
+            }*/
         }
     }
 
